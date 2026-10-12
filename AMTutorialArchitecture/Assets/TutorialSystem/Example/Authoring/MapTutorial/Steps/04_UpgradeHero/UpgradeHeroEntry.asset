@@ -10,10 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0506bd3a1a2a1ec4a9372f27f2363d1e, type: 3}
-  m_Name: IntroEntry
+  m_Name: UpgradeHeroEntry
   m_EditorClassIdentifier: AMTutorialArchitecture.Tutorial.Unity::AMTutorialArchitecture.Tutorial.Unity.Authoring.TutorialEntryAsset
-  id: explain-map
-  dialogue: {fileID: 11400000, guid: 51de3c76f06063b4582c5046b4c05bcf, type: 2}
-  indications: []
+  id: upgrade-hero
+  dialogue: {fileID: 0}
+  indications:
+  - {fileID: 11400000, guid: 2ccaa1c91fdcef74eaaa0e5a000b5005, type: 2}
   interactionPolicy: 0
-  requiredAction: {fileID: 11400000, guid: 2e2f852bed94c934bb34216af8acd79a, type: 2}
+  requiredAction: {fileID: 11400000, guid: c8e06d095ab407a4a94d1d7a1bb5f069, type: 2}

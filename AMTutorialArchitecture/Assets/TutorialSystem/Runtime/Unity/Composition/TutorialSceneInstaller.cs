@@ -1,4 +1,5 @@
 using AMTutorialArchitecture.Tutorial.Application.ViewModels;
+using AMTutorialArchitecture.Tutorial.Unity.Integration;
 using AMTutorialArchitecture.Tutorial.Unity.Targets;
 using Zenject;
 
@@ -10,6 +11,7 @@ namespace AMTutorialArchitecture.Tutorial.Unity.Composition
         {
             Container.BindInterfacesAndSelfTo<TutorialViewModel>().AsSingle();
             Container.BindInterfacesAndSelfTo<TutorialTargetRegistry>().AsSingle();
+            Container.BindInterfacesAndSelfTo<TutorialActivityService>().AsSingle();
         }
     }
 }

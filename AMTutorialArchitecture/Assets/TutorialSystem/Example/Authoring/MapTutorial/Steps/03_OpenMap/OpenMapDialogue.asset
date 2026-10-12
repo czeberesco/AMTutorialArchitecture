@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: OpenMapDialogue
   m_EditorClassIdentifier: AMTutorialArchitecture.Tutorial.Unity::AMTutorialArchitecture.Tutorial.Unity.Authoring.DialogueAsset
   speakerId: Guide
-  text: Open the map to choose our destination.
+  text: That is the theory. Now open the map and see the available routes.
   side: 0

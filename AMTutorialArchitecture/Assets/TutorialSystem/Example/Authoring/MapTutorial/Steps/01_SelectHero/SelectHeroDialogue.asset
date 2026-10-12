@@ -10,8 +10,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c768d8e048aaa3742abfe67a26d901cf, type: 3}
-  m_Name: IntroDialogue
+  m_Name: SelectHeroDialogue
   m_EditorClassIdentifier: AMTutorialArchitecture.Tutorial.Unity::AMTutorialArchitecture.Tutorial.Unity.Authoring.DialogueAsset
   speakerId: Guide
-  text: Every expedition starts with knowing where to go.
+  text: Choose a hero before we begin the expedition.
   side: 0

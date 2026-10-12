@@ -9,9 +9,10 @@ The project uses Unity `6000.3.10f1` and Extenject for dependency injection.
 1. Open the Unity project in `AMTutorialArchitecture/`.
 2. Open `Assets/TutorialSystem/Example/Scenes/TutorialExample.unity`.
 3. Enter Play Mode.
-4. Select **Start Tutorial**, advance the first dialogue, and then select the highlighted **Open Map** target.
+4. Select **Start Showcase** and follow the highlighted controls through all five entries.
+5. After choosing a route, remain inactive for two seconds to see the delayed **Claim Reward** hint. Any button interaction hides it and restarts its timer.
 
-The second entry demonstrates a multi-target indication: both the actionable **Open Map** button and a contextual status element are highlighted by their own Views. It is blocking, so unrelated buttons are disabled, every indicated actionable target remains usable, Skip remains available, and activating the map performs its normal feature action before completing the tutorial.
+The sequence demonstrates dialogue with one selection, a two-box dialogue whose highlight appears only on the final box, a highlight without dialogue, and a blocking multi-target highlight where either route button is valid. Every target View supplies its own highlight, and normal feature behavior still executes when a tutorial target is activated.
 
 The example can be regenerated from **Tools > Tutorial > Rebuild Example**.
 
@@ -41,6 +42,7 @@ flowchart TB
         UiBinding[TutorialViewBinding]
         TargetBinding[TutorialTargetBinding]
         InputBinding[TutorialInputGateBinding]
+        DelayedBinding[DelayedTutorialHintBinding]
     end
 
     subgraph View[Unity View layer]
@@ -49,11 +51,13 @@ flowchart TB
         Target[TutorialTargetView]
         Highlight[View-owned highlight]
         Input[Unity input/selectables]
+        Activity[Reported player activity]
     end
 
     VM --> UiBinding --> Dialog
     VM --> TargetBinding --> Registry --> Target --> Highlight
     VM --> InputBinding --> Input
+    Activity --> DelayedBinding --> Registry
     Dialog -->|RelayCommand| VM
 ```
 
@@ -77,9 +81,11 @@ flowchart LR
         SceneInstaller[TutorialSceneInstaller]
         VM[TutorialViewModel]
         Registry[TutorialTargetRegistry]
+        Activity[TutorialActivityService]
         Bindings[Unity bindings and Views]
         SceneInstaller --> VM
         SceneInstaller --> Registry
+        SceneInstaller --> Activity
         Bindings --> VM
         Bindings --> Registry
     end
@@ -99,12 +105,14 @@ flowchart LR
     IndicationAsset[IndicationAsset]
     ActionAsset[RequiredActionAsset]
     TargetAsset[TutorialTargetAsset]
+    DelayedHintAsset[DelayedTutorialHintAsset]
 
     SequenceAsset --> EntryAsset
     EntryAsset --> DialogueAsset
     EntryAsset -->|0..*| IndicationAsset
     EntryAsset --> ActionAsset
     IndicationAsset --> TargetAsset
+    DelayedHintAsset --> TargetAsset
 
     SequenceAsset -->|validate and convert| Definition[TutorialSequenceDefinition]
     Definition --> Service[ITutorialService.Start]
@@ -223,7 +231,7 @@ sequenceDiagram
     end
 ```
 
-Tutorial assets specify what receives attention, never how it looks. Each target View may implement any highlight technique, and the binding highlights every resolved target in the current entry. The example toggles two different custom child visuals; another View could use a shader, animation, VFX, pointer, or overlay cutout without modifying tutorial logic.
+Tutorial assets specify what receives attention, never how it looks. Each target View may implement any highlight technique, and the binding highlights every resolved target in the current entry. The showcase uses independent child visuals for buttons and contextual text; another View could use a shader, animation, VFX, pointer, or overlay cutout without modifying tutorial logic.
 
 Target Views register and unregister stable target IDs as screens appear and disappear. A non-blocking indication group stays logically active while targets are absent and rebinds as they return. During a blocking entry, all resolved indicated `Selectable`s remain available. If none of the indicated targets is actionable, input stays unlocked and the client emits a warning instead of soft-locking the player.
 
@@ -232,6 +240,22 @@ Target Views register and unregister stable target IDs as screens appear and dis
 The entry supplies one `Blocking` or `NonBlocking` policy for its indication group. Shared logic exposes that policy through the active state; the client decides how to implement it.
 
 The example client implementation stores each `Selectable` state, disables unrelated controls, keeps all indicated actionable targets and the Skip control available, and restores the original states when the entry changes. This is one View implementation, not a domain rule.
+
+## Delayed inactivity hints
+
+Delayed hints deliberately do not become tutorial entries. They do not advance or modify `TutorialModel`; they are client presentation behavior that reuses the target registry and View-owned highlighting.
+
+```mermaid
+flowchart LR
+    Activity[TutorialActivityReporter] -->|reset| ActivityService[TutorialActivityService]
+    HintAsset[DelayedTutorialHintAsset] --> HintBinding[DelayedTutorialHintBinding]
+    ActivityService --> HintBinding
+    HintBinding -->|after inactivity| Registry[TutorialTargetRegistry]
+    Registry --> Target[TutorialTargetView]
+    Target --> Highlight[ITutorialHighlightView]
+```
+
+The showcase arms its reward hint after the main sequence finishes. After two seconds without reported activity it highlights **Claim Reward**. Every interactive button in the example reports activity; an actual game could connect the same service to its central input or interaction router.
 
 ## Project structure
 
@@ -243,6 +267,7 @@ Assets/TutorialSystem/
 │   └── Unity/         assets, Extenject installers, bindings, target Views
 ├── Example/
 │   ├── Authoring/MapTutorial/
+│   │   ├── DelayedHints/ client-side inactivity hint assets
 │   │   ├── Targets/   reusable semantic target assets
 │   │   └── Steps/     one folder per authored tutorial step
 │   └── Scenes/        runnable proof scene
@@ -295,5 +320,5 @@ The proof leaves these production integrations behind interfaces or semantic con
 - Client/server transport and reconciliation for tutorial commands.
 - Localization lookup behind dialogue text keys.
 - Analytics emitted from command results.
-- A separate inactivity/delayed-hint service reusing target registration and highlight capabilities.
+- A production-wide activity source connected to the central input/interaction router.
 - Additional required-action predicates such as counters, state predicates, `AnyOf`, and `AllOf`.

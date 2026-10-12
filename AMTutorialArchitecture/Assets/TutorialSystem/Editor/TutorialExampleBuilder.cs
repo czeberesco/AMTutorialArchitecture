@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using AMTutorialArchitecture.Tutorial.Example;
 using AMTutorialArchitecture.Tutorial.Unity.Authoring;
 using AMTutorialArchitecture.Tutorial.Unity.Bindings;
@@ -23,12 +22,19 @@ namespace AMTutorialArchitecture.Tutorial.Editor
         private const string MapTutorial = Authoring + "/MapTutorial";
         private const string Targets = MapTutorial + "/Targets";
         private const string Steps = MapTutorial + "/Steps";
-        private const string ExplainMapStep = Steps + "/01_ExplainMap";
-        private const string OpenMapStep = Steps + "/02_OpenMap";
+        private const string SelectHeroStep = Steps + "/01_SelectHero";
+        private const string ExplainMapStep = Steps + "/02_ExplainMap";
+        private const string OpenMapStep = Steps + "/03_OpenMap";
+        private const string UpgradeHeroStep = Steps + "/04_UpgradeHero";
+        private const string ChoosePathStep = Steps + "/05_ChoosePath";
+        private const string DelayedHints = MapTutorial + "/DelayedHints";
         private const string Scenes = Root + "/Scenes";
         private const string ScenePath = Scenes + "/TutorialExample.unity";
         private const string ProjectContextPath = "Assets/Resources/ProjectContext.prefab";
+        private const string SelectHeroActionId = "game.hero.select";
         private const string OpenMapActionId = "game.map.open";
+        private const string UpgradeHeroActionId = "game.hero.upgrade";
+        private const string ChoosePathActionId = "game.path.choose";
 
         [MenuItem("Tools/Tutorial/Rebuild Example")]
         public static void Build()
@@ -39,15 +45,19 @@ namespace AMTutorialArchitecture.Tutorial.Editor
             EnsureFolder(Authoring, "MapTutorial");
             EnsureFolder(MapTutorial, "Targets");
             EnsureFolder(MapTutorial, "Steps");
-            EnsureFolder(Steps, "01_ExplainMap");
-            EnsureFolder(Steps, "02_OpenMap");
+            EnsureFolder(Steps, "01_SelectHero");
+            EnsureFolder(Steps, "02_ExplainMap");
+            EnsureFolder(Steps, "03_OpenMap");
+            EnsureFolder(Steps, "04_UpgradeHero");
+            EnsureFolder(Steps, "05_ChoosePath");
+            EnsureFolder(MapTutorial, "DelayedHints");
             EnsureFolder(Root, "Scenes");
             EnsureFolder("Assets", "Resources");
             MigrateLegacyAuthoringAssets();
 
             var content = CreateAuthoringAssets();
             CreateProjectContext();
-            CreateScene(content.Sequence, content.MapButtonTarget, content.MapStatusTarget);
+            CreateScene(content);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log($"[Tutorial] Rebuilt example scene at '{ScenePath}'.");
@@ -55,54 +65,128 @@ namespace AMTutorialArchitecture.Tutorial.Editor
 
         private static ExampleContent CreateAuthoringAssets()
         {
+            var heroTarget = CreateTarget("HeroButtonTarget", "hud.hero-button");
             var mapButtonTarget = LoadOrCreate<TutorialTargetAsset>(Targets + "/MapButtonTarget.asset");
             Set(mapButtonTarget, "id", "hud.map-button");
-
             var mapStatusTarget = LoadOrCreate<TutorialTargetAsset>(Targets + "/MapStatusTarget.asset");
             Set(mapStatusTarget, "id", "hud.map-status");
+            var upgradeTarget = CreateTarget("UpgradeButtonTarget", "hud.upgrade-button");
+            var northPathTarget = CreateTarget("NorthPathTarget", "hud.path-north");
+            var southPathTarget = CreateTarget("SouthPathTarget", "hud.path-south");
+            var rewardTarget = CreateTarget("RewardButtonTarget", "hud.reward-button");
 
-            var introDialogue = LoadOrCreate<DialogueAsset>(ExplainMapStep + "/IntroDialogue.asset");
-            Set(introDialogue, "speakerId", "Guide");
-            Set(introDialogue, "text", "Every expedition starts with knowing where to go.");
+            var selectHeroDialogue = CreateDialogue(
+                SelectHeroStep + "/SelectHeroDialogue.asset",
+                "Guide",
+                "Choose a hero before we begin the expedition.");
+            var selectHeroIndication = CreateIndication(
+                SelectHeroStep + "/HeroButtonIndication.asset",
+                heroTarget);
+            var selectHeroAction = CreateSemanticAction(
+                SelectHeroStep + "/SelectHeroAction.asset",
+                SelectHeroActionId,
+                "Select the hero successfully.");
+            var selectHeroEntry = CreateEntry(
+                SelectHeroStep + "/SelectHeroEntry.asset",
+                "select-hero",
+                selectHeroDialogue,
+                new Object[] { selectHeroIndication },
+                1,
+                selectHeroAction);
 
-            var actionDialogue = LoadOrCreate<DialogueAsset>(OpenMapStep + "/OpenMapDialogue.asset");
-            Set(actionDialogue, "speakerId", "Guide");
-            Set(actionDialogue, "text", "Open the map to choose our destination.");
-
-            var mapButtonIndication = LoadOrCreate<IndicationAsset>(OpenMapStep + "/MapButtonIndication.asset");
-            Set(mapButtonIndication, "target", mapButtonTarget);
-
-            var mapStatusIndication = LoadOrCreate<IndicationAsset>(OpenMapStep + "/MapStatusIndication.asset");
-            Set(mapStatusIndication, "target", mapStatusTarget);
-
+            var explainMapDialogue = CreateDialogue(
+                ExplainMapStep + "/MapExplanationDialogue.asset",
+                "Guide",
+                "Our route crosses dangerous territory. Let me explain how navigation works.");
             var continueAction = LoadOrCreate<ContinueDialogueRequiredActionAsset>(
                 ExplainMapStep + "/ContinueDialogueAction.asset");
+            var explainMapEntry = CreateEntry(
+                ExplainMapStep + "/MapExplanationEntry.asset",
+                "explain-map",
+                explainMapDialogue,
+                new Object[0],
+                0,
+                continueAction);
 
+            var openMapDialogue = CreateDialogue(
+                OpenMapStep + "/OpenMapDialogue.asset",
+                "Guide",
+                "That is the theory. Now open the map and see the available routes.");
+            var mapButtonIndication = LoadOrCreate<IndicationAsset>(OpenMapStep + "/MapButtonIndication.asset");
+            Set(mapButtonIndication, "target", mapButtonTarget);
             var openMapAction = LoadOrCreate<SemanticActionRequiredActionAsset>(
                 OpenMapStep + "/OpenMapAction.asset");
             Set(openMapAction, "actionId", OpenMapActionId);
             Set(openMapAction, "description", "Open the map successfully.");
+            var openMapEntry = CreateEntry(
+                OpenMapStep + "/OpenMapEntry.asset",
+                "open-map",
+                openMapDialogue,
+                new Object[] { mapButtonIndication },
+                1,
+                openMapAction);
 
-            var introEntry = LoadOrCreate<TutorialEntryAsset>(ExplainMapStep + "/IntroEntry.asset");
-            Set(introEntry, "id", "explain-map");
-            Set(introEntry, "dialogue", introDialogue);
-            SetArray(introEntry, "indications", new Object[0]);
-            SetEnum(introEntry, "interactionPolicy", 0);
-            Set(introEntry, "requiredAction", continueAction);
+            var upgradeIndication = CreateIndication(
+                UpgradeHeroStep + "/UpgradeButtonIndication.asset",
+                upgradeTarget);
+            var upgradeAction = CreateSemanticAction(
+                UpgradeHeroStep + "/UpgradeHeroAction.asset",
+                UpgradeHeroActionId,
+                "Upgrade the selected hero.");
+            var upgradeEntry = CreateEntry(
+                UpgradeHeroStep + "/UpgradeHeroEntry.asset",
+                "upgrade-hero",
+                null,
+                new Object[] { upgradeIndication },
+                0,
+                upgradeAction);
 
-            var actionEntry = LoadOrCreate<TutorialEntryAsset>(OpenMapStep + "/OpenMapEntry.asset");
-            Set(actionEntry, "id", "open-map");
-            Set(actionEntry, "dialogue", actionDialogue);
-            SetArray(actionEntry, "indications", new Object[] { mapButtonIndication, mapStatusIndication });
-            SetEnum(actionEntry, "interactionPolicy", 1);
-            Set(actionEntry, "requiredAction", openMapAction);
+            var northIndication = CreateIndication(
+                ChoosePathStep + "/NorthPathIndication.asset",
+                northPathTarget);
+            var southIndication = CreateIndication(
+                ChoosePathStep + "/SouthPathIndication.asset",
+                southPathTarget);
+            var statusIndication = LoadOrCreate<IndicationAsset>(ChoosePathStep + "/MapStatusIndication.asset");
+            Set(statusIndication, "target", mapStatusTarget);
+            var choosePathAction = CreateSemanticAction(
+                ChoosePathStep + "/ChoosePathAction.asset",
+                ChoosePathActionId,
+                "Choose either available route.");
+            var choosePathEntry = CreateEntry(
+                ChoosePathStep + "/ChoosePathEntry.asset",
+                "choose-path",
+                null,
+                new Object[] { northIndication, southIndication, statusIndication },
+                1,
+                choosePathAction);
 
             var sequence = LoadOrCreate<TutorialSequenceAsset>(MapTutorial + "/MapTutorialSequence.asset");
-            Set(sequence, "id", "example.map-tutorial");
+            Set(sequence, "id", "example.architecture-showcase");
             Set(sequence, "canSkip", true);
-            SetArray(sequence, "entries", new Object[] { introEntry, actionEntry });
+            SetArray(sequence, "entries", new Object[]
+            {
+                selectHeroEntry,
+                explainMapEntry,
+                openMapEntry,
+                upgradeEntry,
+                choosePathEntry
+            });
 
-            return new ExampleContent(sequence, mapButtonTarget, mapStatusTarget);
+            var rewardHint = LoadOrCreate<DelayedTutorialHintAsset>(DelayedHints + "/RewardHint.asset");
+            Set(rewardHint, "inactivitySeconds", 2f);
+            SetArray(rewardHint, "targets", new Object[] { rewardTarget });
+
+            return new ExampleContent(
+                sequence,
+                rewardHint,
+                heroTarget,
+                mapButtonTarget,
+                mapStatusTarget,
+                upgradeTarget,
+                northPathTarget,
+                southPathTarget,
+                rewardTarget);
         }
 
         private static void CreateProjectContext()
@@ -121,10 +205,7 @@ namespace AMTutorialArchitecture.Tutorial.Editor
             }
         }
 
-        private static void CreateScene(
-            TutorialSequenceAsset sequence,
-            TutorialTargetAsset mapButtonTarget,
-            TutorialTargetAsset mapStatusTarget)
+        private static void CreateScene(ExampleContent content)
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             CreateCamera();
@@ -135,71 +216,73 @@ namespace AMTutorialArchitecture.Tutorial.Editor
             var background = CreateImage("Background", canvas.transform, new Color(0.055f, 0.075f, 0.12f, 1f));
             Stretch(background.rectTransform);
 
-            var title = CreateText("Title", canvas.transform, "Tutorial Architecture Proof", 42, TextAnchor.MiddleCenter);
-            SetRect(title.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -70f), new Vector2(900f, 70f));
+            var title = CreateText("Title", canvas.transform, "Tutorial Architecture Showcase", 40, TextAnchor.MiddleCenter);
+            SetRect(title.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -48f), new Vector2(1000f, 60f));
 
             var description = CreateText(
                 "Description",
                 canvas.transform,
-                "Start the sequence, advance the first dialogue, then use the highlighted Map button.",
+                "Dialogue + selection  →  multi-box dialogue  →  highlight only  →  multi-highlight  →  delayed hint",
+                20,
+                TextAnchor.MiddleCenter);
+            SetRect(description.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -98f), new Vector2(1500f, 50f));
+
+            var startButton = CreateButton(
+                "StartTutorialButton",
+                canvas.transform,
+                "Start Showcase",
+                new Color(0.18f, 0.47f, 0.78f));
+            SetRect(startButton.GetComponent<RectTransform>(), new Vector2(0.5f, 1f), new Vector2(0f, -155f), new Vector2(280f, 62f));
+
+            var status = CreateText(
+                "FeatureStatus",
+                canvas.transform,
+                "Press Start Showcase to begin.",
                 22,
                 TextAnchor.MiddleCenter);
-            SetRect(description.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -130f), new Vector2(1100f, 60f));
+            SetRect(status.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -220f), new Vector2(1200f, 52f));
+            ConfigureTextTarget(
+                status,
+                content.MapStatusTarget,
+                "MapStatusHighlight",
+                new Color(0.2f, 0.75f, 1f, 0.42f),
+                new Vector2(1240f, 66f));
 
-            var startButton = CreateButton("StartTutorialButton", canvas.transform, "Start Tutorial", new Color(0.18f, 0.47f, 0.78f));
-            SetRect(startButton.GetComponent<RectTransform>(), new Vector2(0.5f, 0.55f), new Vector2(-230f, 0f), new Vector2(300f, 90f));
+            var heroButton = CreateFeatureButton(
+                "HeroButton", canvas.transform, "Select Warrior", new Vector2(-480f, 0f), new Vector2(0.5f, 0.64f));
+            var mapButton = CreateFeatureButton(
+                "MapButton", canvas.transform, "Open Map", new Vector2(-160f, 0f), new Vector2(0.5f, 0.64f));
+            var upgradeButton = CreateFeatureButton(
+                "UpgradeButton", canvas.transform, "Upgrade Hero", new Vector2(160f, 0f), new Vector2(0.5f, 0.64f));
+            var rewardButton = CreateFeatureButton(
+                "RewardButton", canvas.transform, "Claim Reward", new Vector2(480f, 0f), new Vector2(0.5f, 0.64f));
+            var northButton = CreateFeatureButton(
+                "NorthPathButton", canvas.transform, "Choose North Route", new Vector2(-180f, 0f), new Vector2(0.5f, 0.49f));
+            var southButton = CreateFeatureButton(
+                "SouthPathButton", canvas.transform, "Choose South Route", new Vector2(180f, 0f), new Vector2(0.5f, 0.49f));
 
-            var mapButton = CreateButton("MapButton", canvas.transform, "Open Map", new Color(0.31f, 0.65f, 0.38f));
-            SetRect(mapButton.GetComponent<RectTransform>(), new Vector2(0.5f, 0.55f), new Vector2(230f, 0f), new Vector2(300f, 90f));
+            ConfigureButtonTarget(heroButton, content.HeroTarget, "HeroHighlight", new Color(1f, 0.55f, 0.18f, 0.8f));
+            ConfigureButtonTarget(mapButton, content.MapButtonTarget, "MapHighlight", new Color(0.25f, 0.8f, 1f, 0.8f));
+            ConfigureButtonTarget(upgradeButton, content.UpgradeTarget, "UpgradeHighlight", new Color(0.8f, 0.35f, 1f, 0.8f));
+            ConfigureButtonTarget(northButton, content.NorthPathTarget, "NorthPathHighlight", new Color(0.2f, 0.85f, 0.55f, 0.8f));
+            ConfigureButtonTarget(southButton, content.SouthPathTarget, "SouthPathHighlight", new Color(0.2f, 0.85f, 0.55f, 0.8f));
+            ConfigureButtonTarget(rewardButton, content.RewardTarget, "RewardHintHighlight", new Color(1f, 0.82f, 0.12f, 0.85f));
 
-            var highlight = CreateImage("CustomMapHighlight", mapButton.transform, new Color(1f, 0.75f, 0.1f, 0.75f));
-            highlight.raycastTarget = false;
-            highlight.transform.SetAsFirstSibling();
-            SetRect(highlight.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(330f, 120f));
-            highlight.gameObject.SetActive(false);
+            ConfigureExampleAction(heroButton, status, "Warrior selected. The single-box dialogue entry completed.");
+            ConfigureExampleAction(mapButton, status, "Map opened. The two-box dialogue example completed.");
+            ConfigureExampleAction(upgradeButton, status, "Hero upgraded through a highlight-only entry.");
+            ConfigureExampleAction(northButton, status, "North route selected. Wait 2 seconds for the reward hint.");
+            ConfigureExampleAction(southButton, status, "South route selected. Wait 2 seconds for the reward hint.");
+            ConfigureExampleAction(rewardButton, status, "Reward claimed. The inactivity timer has restarted.");
 
-            var highlightView = mapButton.gameObject.AddComponent<GameObjectHighlightView>();
-            Set(highlightView, "highlightRoot", highlight.gameObject);
-            var targetView = mapButton.gameObject.AddComponent<TutorialTargetView>();
-            Set(targetView, "target", mapButtonTarget);
-            Set(targetView, "highlightView", highlightView);
-            Set(targetView, "selectable", mapButton);
-
-            var status = CreateText("FeatureStatus", canvas.transform, "Map is closed.", 24, TextAnchor.MiddleCenter);
-            SetRect(status.rectTransform, new Vector2(0.5f, 0.42f), Vector2.zero, new Vector2(900f, 60f));
-
-            var statusHighlight = CreateImage(
-                "CustomMapStatusHighlight",
-                status.transform,
-                new Color(0.2f, 0.75f, 1f, 0.45f));
-            statusHighlight.raycastTarget = false;
-            statusHighlight.transform.SetAsFirstSibling();
-            SetRect(statusHighlight.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(930f, 74f));
-            statusHighlight.gameObject.SetActive(false);
-
-            var statusHighlightView = status.gameObject.AddComponent<GameObjectHighlightView>();
-            Set(statusHighlightView, "highlightRoot", statusHighlight.gameObject);
-            var statusTargetView = status.gameObject.AddComponent<TutorialTargetView>();
-            Set(statusTargetView, "target", mapStatusTarget);
-            Set(statusTargetView, "highlightView", statusHighlightView);
-
-            var mapPanel = CreateImage("MapPanel", canvas.transform, new Color(0.12f, 0.24f, 0.2f, 0.96f));
-            SetRect(mapPanel.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, 40f), new Vector2(760f, 360f));
-            var mapLabel = CreateText("MapLabel", mapPanel.transform, "WORLD MAP\n\nThe tutorial completed after the feature action succeeded.", 28, TextAnchor.MiddleCenter);
-            Stretch(mapLabel.rectTransform, 30f);
-            mapPanel.gameObject.SetActive(false);
-
-            var mapFeature = mapButton.gameObject.AddComponent<ExampleMapView>();
-            Set(mapFeature, "openMapButton", mapButton);
-            Set(mapFeature, "mapPanel", mapPanel.gameObject);
-            Set(mapFeature, "statusText", status);
-
-            var actionEmitter = mapButton.gameObject.AddComponent<TutorialActionEmitter>();
-            Set(actionEmitter, "actionId", OpenMapActionId);
-            Set(actionEmitter, "button", mapButton);
+            ConfigureActionEmitter(heroButton, SelectHeroActionId);
+            ConfigureActionEmitter(mapButton, OpenMapActionId);
+            ConfigureActionEmitter(upgradeButton, UpgradeHeroActionId);
+            ConfigureActionEmitter(northButton, ChoosePathActionId);
+            ConfigureActionEmitter(southButton, ChoosePathActionId);
 
             var startTrigger = startButton.gameObject.AddComponent<TutorialStartTrigger>();
-            Set(startTrigger, "sequence", sequence);
+            Set(startTrigger, "sequence", content.Sequence);
             Set(startTrigger, "button", startButton);
 
             var tutorialUi = CreateTutorialUi(canvas.transform);
@@ -216,6 +299,20 @@ namespace AMTutorialArchitecture.Tutorial.Editor
             var inputGate = canvas.gameObject.AddComponent<TutorialInputGateBinding>();
             Set(inputGate, "interactionRoot", canvas.transform);
             SetArray(inputGate, "alwaysAllowed", new Object[] { tutorialUi.Skip });
+
+            var delayedHint = canvas.gameObject.AddComponent<DelayedTutorialHintBinding>();
+            Set(delayedHint, "hint", content.RewardHint);
+            Set(delayedHint, "armAfterSequenceFinishes", true);
+
+            ConfigureActivityReporter(startButton);
+            ConfigureActivityReporter(heroButton);
+            ConfigureActivityReporter(mapButton);
+            ConfigureActivityReporter(upgradeButton);
+            ConfigureActivityReporter(northButton);
+            ConfigureActivityReporter(southButton);
+            ConfigureActivityReporter(rewardButton);
+            ConfigureActivityReporter(tutorialUi.Continue);
+            ConfigureActivityReporter(tutorialUi.Skip);
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             EditorBuildSettings.scenes = new[]
@@ -291,6 +388,79 @@ namespace AMTutorialArchitecture.Tutorial.Editor
             return new TutorialUi(dialoguePanel.rectTransform, speaker, body, progress, continueButton, skipButton);
         }
 
+        private static Button CreateFeatureButton(
+            string name,
+            Transform parent,
+            string label,
+            Vector2 position,
+            Vector2 anchor)
+        {
+            var button = CreateButton(name, parent, label, new Color(0.22f, 0.38f, 0.52f));
+            SetRect(button.GetComponent<RectTransform>(), anchor, position, new Vector2(285f, 76f));
+            return button;
+        }
+
+        private static void ConfigureButtonTarget(
+            Button button,
+            TutorialTargetAsset target,
+            string highlightName,
+            Color highlightColor)
+        {
+            var highlight = CreateImage(highlightName, button.transform, highlightColor);
+            highlight.raycastTarget = false;
+            highlight.transform.SetAsFirstSibling();
+            SetRect(highlight.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(310f, 101f));
+            highlight.gameObject.SetActive(false);
+
+            var highlightView = button.gameObject.AddComponent<GameObjectHighlightView>();
+            Set(highlightView, "highlightRoot", highlight.gameObject);
+            var targetView = button.gameObject.AddComponent<TutorialTargetView>();
+            Set(targetView, "target", target);
+            Set(targetView, "highlightView", highlightView);
+            Set(targetView, "selectable", button);
+        }
+
+        private static void ConfigureTextTarget(
+            Text text,
+            TutorialTargetAsset target,
+            string highlightName,
+            Color highlightColor,
+            Vector2 highlightSize)
+        {
+            var highlight = CreateImage(highlightName, text.transform, highlightColor);
+            highlight.raycastTarget = false;
+            highlight.transform.SetAsFirstSibling();
+            SetRect(highlight.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, highlightSize);
+            highlight.gameObject.SetActive(false);
+
+            var highlightView = text.gameObject.AddComponent<GameObjectHighlightView>();
+            Set(highlightView, "highlightRoot", highlight.gameObject);
+            var targetView = text.gameObject.AddComponent<TutorialTargetView>();
+            Set(targetView, "target", target);
+            Set(targetView, "highlightView", highlightView);
+        }
+
+        private static void ConfigureExampleAction(Button button, Text status, string message)
+        {
+            var actionView = button.gameObject.AddComponent<ExampleActionView>();
+            Set(actionView, "button", button);
+            Set(actionView, "statusText", status);
+            Set(actionView, "successMessage", message);
+        }
+
+        private static void ConfigureActionEmitter(Button button, string actionId)
+        {
+            var emitter = button.gameObject.AddComponent<TutorialActionEmitter>();
+            Set(emitter, "actionId", actionId);
+            Set(emitter, "button", button);
+        }
+
+        private static void ConfigureActivityReporter(Button button)
+        {
+            var reporter = button.gameObject.AddComponent<TutorialActivityReporter>();
+            Set(reporter, "button", button);
+        }
+
         private static Button CreateButton(string name, Transform parent, string label, Color color)
         {
             var image = CreateImage(name, parent, color);
@@ -355,21 +525,96 @@ namespace AMTutorialArchitecture.Tutorial.Editor
             return asset;
         }
 
+        private static TutorialTargetAsset CreateTarget(string fileName, string id)
+        {
+            var target = LoadOrCreate<TutorialTargetAsset>($"{Targets}/{fileName}.asset");
+            Set(target, "id", id);
+            return target;
+        }
+
+        private static DialogueAsset CreateDialogue(string path, string speakerId, string text)
+        {
+            var dialogue = LoadOrCreate<DialogueAsset>(path);
+            Set(dialogue, "speakerId", speakerId);
+            Set(dialogue, "text", text);
+            return dialogue;
+        }
+
+        private static IndicationAsset CreateIndication(string path, TutorialTargetAsset target)
+        {
+            var indication = LoadOrCreate<IndicationAsset>(path);
+            Set(indication, "target", target);
+            return indication;
+        }
+
+        private static SemanticActionRequiredActionAsset CreateSemanticAction(
+            string path,
+            string actionId,
+            string description)
+        {
+            var action = LoadOrCreate<SemanticActionRequiredActionAsset>(path);
+            Set(action, "actionId", actionId);
+            Set(action, "description", description);
+            return action;
+        }
+
+        private static TutorialEntryAsset CreateEntry(
+            string path,
+            string id,
+            DialogueAsset dialogue,
+            Object[] indications,
+            int interactionPolicy,
+            RequiredActionAsset requiredAction)
+        {
+            var entry = LoadOrCreate<TutorialEntryAsset>(path);
+            Set(entry, "id", id);
+            Set(entry, "dialogue", dialogue);
+            SetArray(entry, "indications", indications);
+            SetEnum(entry, "interactionPolicy", interactionPolicy);
+            Set(entry, "requiredAction", requiredAction);
+            return entry;
+        }
+
         private static void MigrateLegacyAuthoringAssets()
         {
+            MoveAssetIfPresent(
+                Steps + "/01_ExplainMap/IntroDialogue.asset",
+                ExplainMapStep + "/MapExplanationDialogue.asset");
+            MoveAssetIfPresent(
+                Steps + "/01_ExplainMap/IntroEntry.asset",
+                ExplainMapStep + "/MapExplanationEntry.asset");
+            MoveAssetIfPresent(
+                Steps + "/01_ExplainMap/ContinueDialogueAction.asset",
+                ExplainMapStep + "/ContinueDialogueAction.asset");
+            MoveAssetIfPresent(
+                Steps + "/02_OpenMap/OpenMapDialogue.asset",
+                OpenMapStep + "/OpenMapDialogue.asset");
+            MoveAssetIfPresent(
+                Steps + "/02_OpenMap/OpenMapEntry.asset",
+                OpenMapStep + "/OpenMapEntry.asset");
+            MoveAssetIfPresent(
+                Steps + "/02_OpenMap/MapButtonIndication.asset",
+                OpenMapStep + "/MapButtonIndication.asset");
+            MoveAssetIfPresent(
+                Steps + "/02_OpenMap/MapStatusIndication.asset",
+                ChoosePathStep + "/MapStatusIndication.asset");
+            MoveAssetIfPresent(
+                Steps + "/02_OpenMap/OpenMapAction.asset",
+                OpenMapStep + "/OpenMapAction.asset");
+
             MoveAssetIfPresent(Authoring + "/MapTutorialSequence.asset", MapTutorial + "/MapTutorialSequence.asset");
             MoveAssetIfPresent(
                 Authoring + "/MapTutorialSequence/MapTutorialSequence.asset",
                 MapTutorial + "/MapTutorialSequence.asset");
             MoveAssetIfPresent(Authoring + "/MapButtonTarget.asset", Targets + "/MapButtonTarget.asset");
-            MoveAssetIfPresent(Authoring + "/IntroDialogue.asset", ExplainMapStep + "/IntroDialogue.asset");
+            MoveAssetIfPresent(Authoring + "/IntroDialogue.asset", ExplainMapStep + "/MapExplanationDialogue.asset");
             MoveAssetIfPresent(
                 Authoring + "/MapTutorialSequence/IntroEntry/IntroDialogue.asset",
-                ExplainMapStep + "/IntroDialogue.asset");
-            MoveAssetIfPresent(Authoring + "/IntroEntry.asset", ExplainMapStep + "/IntroEntry.asset");
+                ExplainMapStep + "/MapExplanationDialogue.asset");
+            MoveAssetIfPresent(Authoring + "/IntroEntry.asset", ExplainMapStep + "/MapExplanationEntry.asset");
             MoveAssetIfPresent(
                 Authoring + "/MapTutorialSequence/IntroEntry/IntroEntry.asset",
-                ExplainMapStep + "/IntroEntry.asset");
+                ExplainMapStep + "/MapExplanationEntry.asset");
             MoveAssetIfPresent(
                 Authoring + "/ContinueDialogueAction.asset",
                 ExplainMapStep + "/ContinueDialogueAction.asset");
@@ -386,6 +631,8 @@ namespace AMTutorialArchitecture.Tutorial.Editor
             DeleteFolderIfEmpty(Authoring + "/MapTutorialSequence/IntroEntry");
             DeleteFolderIfEmpty(Authoring + "/MapTutorialSequence");
             DeleteFolderIfEmpty(Authoring + "/CommonActions");
+            DeleteFolderIfEmpty(Steps + "/01_ExplainMap");
+            DeleteFolderIfEmpty(Steps + "/02_OpenMap");
         }
 
         private static void MoveAssetIfPresent(string sourcePath, string destinationPath)
@@ -438,6 +685,14 @@ namespace AMTutorialArchitecture.Tutorial.Editor
             EditorUtility.SetDirty(target);
         }
 
+        private static void Set(Object target, string propertyName, float value)
+        {
+            var serializedObject = new SerializedObject(target);
+            serializedObject.FindProperty(propertyName).floatValue = value;
+            serializedObject.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(target);
+        }
+
         private static void Set(Object target, string propertyName, Object value)
         {
             var serializedObject = new SerializedObject(target);
@@ -472,19 +727,43 @@ namespace AMTutorialArchitecture.Tutorial.Editor
         {
             public ExampleContent(
                 TutorialSequenceAsset sequence,
+                DelayedTutorialHintAsset rewardHint,
+                TutorialTargetAsset heroTarget,
                 TutorialTargetAsset mapButtonTarget,
-                TutorialTargetAsset mapStatusTarget)
+                TutorialTargetAsset mapStatusTarget,
+                TutorialTargetAsset upgradeTarget,
+                TutorialTargetAsset northPathTarget,
+                TutorialTargetAsset southPathTarget,
+                TutorialTargetAsset rewardTarget)
             {
                 Sequence = sequence;
+                RewardHint = rewardHint;
+                HeroTarget = heroTarget;
                 MapButtonTarget = mapButtonTarget;
                 MapStatusTarget = mapStatusTarget;
+                UpgradeTarget = upgradeTarget;
+                NorthPathTarget = northPathTarget;
+                SouthPathTarget = southPathTarget;
+                RewardTarget = rewardTarget;
             }
 
             public TutorialSequenceAsset Sequence { get; }
 
+            public DelayedTutorialHintAsset RewardHint { get; }
+
+            public TutorialTargetAsset HeroTarget { get; }
+
             public TutorialTargetAsset MapButtonTarget { get; }
 
             public TutorialTargetAsset MapStatusTarget { get; }
+
+            public TutorialTargetAsset UpgradeTarget { get; }
+
+            public TutorialTargetAsset NorthPathTarget { get; }
+
+            public TutorialTargetAsset SouthPathTarget { get; }
+
+            public TutorialTargetAsset RewardTarget { get; }
         }
 
         private sealed class TutorialUi

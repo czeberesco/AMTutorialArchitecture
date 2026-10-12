@@ -41,7 +41,7 @@ Shared logic must remain compatible with execution outside Unity. Do not introdu
 - Presentation target identity and completion-action identity are separate concepts, even when they refer to the same user interaction.
 - Runtime progress must identify the active sequence and exact entry so the tutorial can resume at the same point.
 - Skipping applies to the remaining sequence, never to only one entry. Skip availability is configured per sequence and is meaningful only for sequences longer than one entry.
-- Delayed inactivity hints are related presentation behavior but should not be folded into the core sequence state machine unless a concrete design requires it.
+- Delayed inactivity hints are client presentation behavior outside the deterministic sequence state machine. They reuse semantic targets and View-owned highlighting, reset on reported player activity, and must not mutate tutorial progress.
 
 ## Blocking Policy
 
@@ -63,6 +63,7 @@ The intended authoring model contains:
 - `IndicationAsset`: the semantic tutorial target only; it contains no highlight style.
 - `RequiredActionAsset`: a semantic completion condition, not a `UnityEvent`, delegate, Button reference, or scene callback.
 - `TutorialTargetAsset`: a stable target identity shared by authoring assets and View components.
+- `DelayedTutorialHintAsset`: client-side inactivity duration and semantic targets; it contains no highlight style or runtime timer state.
 
 Convert authoring assets into pure C# definitions/DTOs at the Unity boundary. Runtime models and saved progress must not mutate ScriptableObjects.
 
@@ -137,6 +138,7 @@ Use focused Unity tests for integration behavior:
 - Highlight capability invocation and cleanup.
 - Missing-capability warnings.
 - Input-policy integration where practical.
+- Delayed-hint timing, display, cleanup, and activity reset behavior.
 
 Tests should verify observable behavior rather than private implementation details.
 
@@ -173,7 +175,7 @@ Keep the root `README.md` focused on explaining the architecture to a reviewer. 
 - Tutorial entry state machine.
 - Target registration, binding, and View-owned highlighting.
 - Blocking and non-blocking behavior.
-- A concrete dialogue/dialogue/dialogue-plus-indication example.
+- Concrete examples of dialogue-plus-indication, multi-entry dialogue, indication-only, multi-target indication, and delayed inactivity hints.
 - How to open, run, and test the proof of architecture.
 
 Use Mermaid diagrams so the schematics remain reviewable and version-controlled as text. Keep diagrams consistent with the implementation.

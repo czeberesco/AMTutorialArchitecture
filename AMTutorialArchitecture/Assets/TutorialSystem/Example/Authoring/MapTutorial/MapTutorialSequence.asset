@@ -12,8 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6f7828e3a3060364797a1c646cdc8b9d, type: 3}
   m_Name: MapTutorialSequence
   m_EditorClassIdentifier: AMTutorialArchitecture.Tutorial.Unity::AMTutorialArchitecture.Tutorial.Unity.Authoring.TutorialSequenceAsset
-  id: example.map-tutorial
+  id: example.architecture-showcase
   canSkip: 1
   entries:
+  - {fileID: 11400000, guid: 8f0344dd592f77443b5b9f4bed58f282, type: 2}
   - {fileID: 11400000, guid: ce137e34bf6238d4d9c1e63942e1fc58, type: 2}
   - {fileID: 11400000, guid: ff1246a5dc36aa448a95f82583d4ad0e, type: 2}
+  - {fileID: 11400000, guid: 5f2e1bd25156ba841a37f92442a16662, type: 2}
+  - {fileID: 11400000, guid: 7adc302df8448f44a898162c66e857f1, type: 2}
