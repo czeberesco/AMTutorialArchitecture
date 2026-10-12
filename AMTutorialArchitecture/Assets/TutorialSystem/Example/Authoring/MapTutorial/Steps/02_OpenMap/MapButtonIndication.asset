@@ -13,4 +13,3 @@ MonoBehaviour:
   m_Name: MapButtonIndication
   m_EditorClassIdentifier: AMTutorialArchitecture.Tutorial.Unity::AMTutorialArchitecture.Tutorial.Unity.Authoring.IndicationAsset
   target: {fileID: 11400000, guid: 3f53543e86546464ea387d3c0ffe1e0f, type: 2}
-  interactionPolicy: 1

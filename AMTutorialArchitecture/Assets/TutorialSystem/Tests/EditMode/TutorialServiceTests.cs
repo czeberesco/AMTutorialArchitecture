@@ -43,7 +43,7 @@ namespace AMTutorialArchitecture.Tutorial.Tests
                 Assert.That(viewModel.HasDialogue, Is.True);
                 Assert.That(viewModel.HasIndication, Is.True);
                 Assert.That(viewModel.CanContinueDialogue, Is.False);
-                Assert.That(viewModel.TargetId, Is.EqualTo("hud.map-button"));
+                Assert.That(viewModel.TargetIds, Is.EquivalentTo(new[] { "hud.map-button", "hud.map-status" }));
                 Assert.That(viewModel.InteractionPolicy, Is.EqualTo(TutorialInteractionPolicy.Blocking));
 
                 var completion = service.SubmitAction(TutorialActionOccurrence.Success(OpenMapAction));
@@ -95,7 +95,8 @@ namespace AMTutorialArchitecture.Tutorial.Tests
             var entry = new TutorialEntryDefinition(
                 "invalid-combined",
                 new DialogueDefinition("Guide", "Open the map.", TutorialDialogueSide.Left),
-                new IndicationDefinition("hud.map-button", TutorialInteractionPolicy.Blocking),
+                new[] { new IndicationDefinition("hud.map-button") },
+                TutorialInteractionPolicy.Blocking,
                 new ContinueDialogueRequiredActionDefinition());
             var sequence = new TutorialSequenceDefinition("invalid", false, new[] { entry });
 
@@ -118,12 +119,18 @@ namespace AMTutorialArchitecture.Tutorial.Tests
                     new TutorialEntryDefinition(
                         "explain-map",
                         new DialogueDefinition("Guide", "Let me show you the map.", TutorialDialogueSide.Left),
-                        null,
+                        System.Array.Empty<IndicationDefinition>(),
+                        TutorialInteractionPolicy.NonBlocking,
                         new ContinueDialogueRequiredActionDefinition()),
                     new TutorialEntryDefinition(
                         "open-map",
                         new DialogueDefinition("Guide", "Open the map now.", TutorialDialogueSide.Left),
-                        new IndicationDefinition("hud.map-button", TutorialInteractionPolicy.Blocking),
+                        new[]
+                        {
+                            new IndicationDefinition("hud.map-button"),
+                            new IndicationDefinition("hud.map-status")
+                        },
+                        TutorialInteractionPolicy.Blocking,
                         new SemanticActionRequiredActionDefinition(OpenMapAction))
                 });
         }
@@ -138,7 +145,8 @@ namespace AMTutorialArchitecture.Tutorial.Tests
                     new TutorialEntryDefinition(
                         "open-map",
                         null,
-                        new IndicationDefinition("hud.map-button", TutorialInteractionPolicy.NonBlocking),
+                        new[] { new IndicationDefinition("hud.map-button") },
+                        TutorialInteractionPolicy.NonBlocking,
                         new SemanticActionRequiredActionDefinition(OpenMapAction))
                 });
         }

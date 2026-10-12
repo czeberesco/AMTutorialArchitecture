@@ -11,7 +11,7 @@ The project uses Unity `6000.3.10f1` and Extenject for dependency injection.
 3. Enter Play Mode.
 4. Select **Start Tutorial**, advance the first dialogue, and then select the highlighted **Open Map** target.
 
-The second entry is blocking: unrelated buttons are disabled, the target View supplies its own highlight, Skip remains available, and activating the target performs its normal feature action before completing the tutorial.
+The second entry demonstrates a multi-target indication: both the actionable **Open Map** button and a contextual status element are highlighted by their own Views. It is blocking, so unrelated buttons are disabled, every indicated actionable target remains usable, Skip remains available, and activating the map performs its normal feature action before completing the tutorial.
 
 The example can be regenerated from **Tools > Tutorial > Rebuild Example**.
 
@@ -102,7 +102,7 @@ flowchart LR
 
     SequenceAsset --> EntryAsset
     EntryAsset --> DialogueAsset
-    EntryAsset --> IndicationAsset
+    EntryAsset -->|0..*| IndicationAsset
     EntryAsset --> ActionAsset
     IndicationAsset --> TargetAsset
 
@@ -118,11 +118,12 @@ An entry has the following composition:
 ```text
 TutorialEntry
 ├── Dialogue        optional
-├── Indication      optional
+├── Indications     zero or more
+├── InputPolicy     one policy for the indication group
 └── RequiredAction  exactly one
 ```
 
-Dialogue-only, indication-only, and dialogue-plus-indication entries are valid. A long dialogue is authored as multiple entries; only its final entry contains the indication. A combined entry completes through the indicated semantic action rather than through dialogue dismissal.
+Dialogue-only, indication-only, and dialogue-plus-indication entries are valid. One step can indicate multiple UI or world elements while retaining one semantic completion condition. A long dialogue is authored as multiple entries; only its final entry contains the indications. A combined entry completes through the required semantic action rather than through dialogue dismissal.
 
 ## Starting a sequence
 
@@ -209,26 +210,28 @@ sequenceDiagram
     participant Target as TutorialTargetView
     participant Highlight as ITutorialHighlightView
 
-    VM-->>Binding: Target ID changed
-    Binding->>Registry: Resolve semantic target ID
-    Registry-->>Binding: Live target View
-    Binding->>Target: TryShowHighlight()
-    alt target supplies capability
-        Target->>Highlight: ShowHighlight()
-    else capability missing
-        Binding-->>Binding: Emit contextual warning once
+    VM-->>Binding: Target IDs changed
+    loop every indicated target
+        Binding->>Registry: Resolve semantic target ID
+        Registry-->>Binding: Live target View
+        Binding->>Target: TryShowHighlight()
+        alt target supplies capability
+            Target->>Highlight: ShowHighlight()
+        else capability missing
+            Binding-->>Binding: Emit contextual warning once
+        end
     end
 ```
 
-Tutorial assets specify what receives attention, never how it looks. Each target View may implement any highlight technique. The example toggles a custom child visual; another View could use a shader, animation, VFX, pointer, or overlay cutout without modifying tutorial logic.
+Tutorial assets specify what receives attention, never how it looks. Each target View may implement any highlight technique, and the binding highlights every resolved target in the current entry. The example toggles two different custom child visuals; another View could use a shader, animation, VFX, pointer, or overlay cutout without modifying tutorial logic.
 
-Target Views register and unregister stable target IDs as screens appear and disappear. A non-blocking indication stays logically active while its target is absent and rebinds when the target returns. A blocking indication with a missing/unusable target leaves input unlocked and emits a warning instead of soft-locking the player.
+Target Views register and unregister stable target IDs as screens appear and disappear. A non-blocking indication group stays logically active while targets are absent and rebinds as they return. During a blocking entry, all resolved indicated `Selectable`s remain available. If none of the indicated targets is actionable, input stays unlocked and the client emits a warning instead of soft-locking the player.
 
 ## Blocking policy
 
-The indication definition supplies `Blocking` or `NonBlocking`. Shared logic exposes that policy through the active state; the client decides how to implement it.
+The entry supplies one `Blocking` or `NonBlocking` policy for its indication group. Shared logic exposes that policy through the active state; the client decides how to implement it.
 
-The example client implementation stores each `Selectable` state, disables unrelated controls, keeps the required target and Skip control available, and restores the original states when the entry changes. This is one View implementation, not a domain rule.
+The example client implementation stores each `Selectable` state, disables unrelated controls, keeps all indicated actionable targets and the Skip control available, and restores the original states when the entry changes. This is one View implementation, not a domain rule.
 
 ## Project structure
 
@@ -238,7 +241,11 @@ Assets/TutorialSystem/
 │   ├── Domain/        pure definitions, validation, model, commands/results
 │   ├── Application/   service facade, messages, RelayCommand, ViewModel
 │   └── Unity/         assets, Extenject installers, bindings, target Views
-├── Example/           authored example content, scene, small feature View
+├── Example/
+│   ├── Authoring/MapTutorial/
+│   │   ├── Targets/   reusable semantic target assets
+│   │   └── Steps/     one folder per authored tutorial step
+│   └── Scenes/        runnable proof scene
 ├── Editor/            reproducible example builder
 └── Tests/
     ├── EditMode/      state machine, service, ViewModel, asset conversion

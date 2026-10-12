@@ -31,9 +31,9 @@ Shared logic must remain compatible with execution outside Unity. Do not introdu
 ## Tutorial Domain
 
 - A tutorial is an ordered sequence of tutorial entries.
-- An entry contains an optional dialogue and an optional indication. At least one must be present.
+- An entry contains an optional dialogue and zero or more indications. At least a dialogue or one indication must be present.
 - Every entry has one explicit required action that determines completion.
-- A long dialogue is represented by multiple entries. When it leads to an indicated action, only the last dialogue entry also contains the indication.
+- A long dialogue is represented by multiple entries. When it leads to an indicated action, only the last dialogue entry also contains the indication group.
 - A dialogue-plus-indication entry completes through its required indicated action, not merely by dismissing the dialogue.
 - Activating an indicated element still executes that element's normal game behavior.
 - Tutorial progression should normally occur only after the expected semantic action succeeds. A failed gameplay command must not accidentally advance the tutorial.
@@ -45,10 +45,10 @@ Shared logic must remain compatible with execution outside Unity. Do not introdu
 
 ## Blocking Policy
 
-- Shared logic decides whether an active indication is `Blocking` or `NonBlocking` and includes that policy in its command result/presentation state.
+- Shared logic decides whether an active indication group is `Blocking` or `NonBlocking` and includes that policy in its command result/presentation state.
 - The client decides how to implement the policy with Unity input and UI facilities.
-- A blocking entry permits only the intended interaction and must not soft-lock permanently when its target cannot be resolved.
-- A non-blocking entry remains logically active when the player navigates away. Its presentation hides while the target is unavailable and returns when a matching target registers again.
+- A blocking entry permits all indicated interactions and must not soft-lock permanently when none of its targets can be resolved to an actionable control.
+- A non-blocking entry remains logically active when the player navigates away. Individual presentations hide while their targets are unavailable and return when matching targets register again.
 - Losing a target or changing screens does not complete an entry.
 
 ## ScriptableObject Authoring
@@ -58,7 +58,7 @@ Use ScriptableObjects as immutable authoring data, not as player-specific runtim
 The intended authoring model contains:
 
 - `TutorialSequenceAsset`: ordered entries and sequence-level configuration.
-- `TutorialEntryAsset`: optional dialogue, optional indication, and one required action.
+- `TutorialEntryAsset`: optional dialogue, zero or more indications, one entry-level interaction policy, and one required action.
 - `DialogueAsset`: localized dialogue content, speaker identity, and presentation placement data required by the design.
 - `IndicationAsset`: the semantic tutorial target only; it contains no highlight style.
 - `RequiredActionAsset`: a semantic completion condition, not a `UnityEvent`, delegate, Button reference, or scene callback.
@@ -106,7 +106,7 @@ The tutorial domain chooses **what** receives attention. The resolved target Vie
 - A target View may optionally expose a small highlight capability such as `ShowHighlight`/`HideHighlight`.
 - Concrete Views may use completely different implementations: animation, outline, shader, VFX, pointer, overlay cutout, or another presentation.
 - Keep target capabilities focused. Target identity, highlighting, anchoring/bounds, and activation observation should not be forced into one large interface.
-- Binding code resolves the active semantic target, detects supported capabilities, shows the new presentation, and cleans up the previous presentation.
+- Binding code resolves every active semantic target, detects supported capabilities, shows each presentation, and cleans up the previous presentations.
 - Highlight calls must be idempotent and cleanup must handle entry changes, disabled Views, scene unloads, and target re-registration.
 - If an indicated target resolves but has no highlight implementation, emit a clear warning once for that binding attempt. Missing highlighting is a client presentation/configuration problem, not a shared-domain failure.
 

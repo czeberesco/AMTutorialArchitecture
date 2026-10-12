@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using AMTutorialArchitecture.Tutorial.Domain.Actions;
 using AMTutorialArchitecture.Tutorial.Domain.Definitions;
 
@@ -89,10 +88,22 @@ namespace AMTutorialArchitecture.Tutorial.Domain.Validation
                     $"{location} ('{entry.Id}') contains empty dialogue text."));
             }
 
-            if (entry.HasIndication && string.IsNullOrWhiteSpace(entry.Indication.TargetId))
+            var targetIds = new HashSet<string>();
+            for (var indicationIndex = 0; indicationIndex < entry.Indications.Count; indicationIndex++)
             {
-                issues.Add(TutorialValidationIssue.Error(
-                    $"{location} ('{entry.Id}') has an indication with no target ID."));
+                var indication = entry.Indications[indicationIndex];
+                if (indication == null || string.IsNullOrWhiteSpace(indication.TargetId))
+                {
+                    issues.Add(TutorialValidationIssue.Error(
+                        $"{location} ('{entry.Id}') has an invalid indication at index {indicationIndex}."));
+                    continue;
+                }
+
+                if (!targetIds.Add(indication.TargetId))
+                {
+                    issues.Add(TutorialValidationIssue.Error(
+                        $"{location} ('{entry.Id}') repeats target ID '{indication.TargetId}'."));
+                }
             }
 
             if (entry.HasIndication

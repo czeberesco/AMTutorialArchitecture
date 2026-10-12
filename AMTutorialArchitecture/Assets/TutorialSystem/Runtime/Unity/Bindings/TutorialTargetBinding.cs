@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using AMTutorialArchitecture.Tutorial.Application.ViewModels;
 using AMTutorialArchitecture.Tutorial.Domain.Definitions;
 using AMTutorialArchitecture.Tutorial.Unity.Targets;
@@ -11,9 +13,10 @@ namespace AMTutorialArchitecture.Tutorial.Unity.Bindings
     {
         private TutorialViewModel viewModel;
         private ITutorialTargetRegistry registry;
-        private TutorialTargetView boundTarget;
+        private readonly List<TutorialTargetView> boundTargets = new List<TutorialTargetView>();
+        private readonly HashSet<string> warningKeys = new HashSet<string>();
         private bool subscribed;
-        private string lastWarningKey;
+        private string activeEntryKey;
 
         [Inject]
         public void Construct(TutorialViewModel tutorialViewModel, ITutorialTargetRegistry targetRegistry)
@@ -33,7 +36,7 @@ namespace AMTutorialArchitecture.Tutorial.Unity.Bindings
         private void OnDisable()
         {
             Unsubscribe();
-            ClearTarget();
+            ClearTargets();
         }
 
         private void SubscribeIfPossible()
@@ -69,7 +72,7 @@ namespace AMTutorialArchitecture.Tutorial.Unity.Bindings
 
         private void OnTargetRegistered(object sender, TutorialTargetRegistrationEventArgs args)
         {
-            if (args.Target.TargetId == viewModel.TargetId)
+            if (viewModel.TargetIds.Contains(args.Target.TargetId))
             {
                 Refresh();
             }
@@ -77,9 +80,9 @@ namespace AMTutorialArchitecture.Tutorial.Unity.Bindings
 
         private void OnTargetUnregistered(object sender, TutorialTargetRegistrationEventArgs args)
         {
-            if (boundTarget == args.Target)
+            if (boundTargets.Contains(args.Target))
             {
-                ClearTarget();
+                Refresh();
             }
         }
 
@@ -90,55 +93,68 @@ namespace AMTutorialArchitecture.Tutorial.Unity.Bindings
                 return;
             }
 
-            ClearTarget();
-            if (!viewModel.HasIndication || string.IsNullOrWhiteSpace(viewModel.TargetId))
+            ClearTargets();
+            var entryKey = $"{viewModel.SequenceId}:{viewModel.EntryId}";
+            if (activeEntryKey != entryKey)
             {
-                lastWarningKey = null;
+                activeEntryKey = entryKey;
+                warningKeys.Clear();
+            }
+
+            if (!viewModel.HasIndication)
+            {
                 return;
             }
 
-            if (!registry.TryGet(viewModel.TargetId, out var target))
+            foreach (var targetId in viewModel.TargetIds)
             {
-                if (viewModel.InteractionPolicy == TutorialInteractionPolicy.Blocking)
+                if (string.IsNullOrWhiteSpace(targetId))
                 {
-                    WarnOnce("missing-target",
-                        $"Blocking target '{viewModel.TargetId}' is not registered. Input remains unblocked to avoid a soft lock.");
+                    continue;
                 }
 
-                return;
-            }
+                if (!registry.TryGet(targetId, out var target))
+                {
+                    if (viewModel.InteractionPolicy == TutorialInteractionPolicy.Blocking)
+                    {
+                        WarnOnce(targetId, "missing-target",
+                            $"Blocking target '{targetId}' is not registered. Available targets remain usable.");
+                    }
 
-            boundTarget = target;
-            if (!boundTarget.TryShowHighlight())
-            {
-                WarnOnce("missing-highlight",
-                    $"Target '{viewModel.TargetId}' resolved to '{boundTarget.name}' but has no " +
-                    $"{nameof(ITutorialHighlightView)} implementation.");
-            }
-            else
-            {
-                lastWarningKey = null;
+                    continue;
+                }
+
+                boundTargets.Add(target);
+                if (!target.TryShowHighlight())
+                {
+                    WarnOnce(targetId, "missing-highlight",
+                        $"Target '{targetId}' resolved to '{target.name}' but has no " +
+                        $"{nameof(ITutorialHighlightView)} implementation.");
+                }
             }
         }
 
-        private void ClearTarget()
+        private void ClearTargets()
         {
-            if (boundTarget != null)
+            foreach (var target in boundTargets)
             {
-                boundTarget.HideHighlight();
-                boundTarget = null;
+                if (target != null)
+                {
+                    target.HideHighlight();
+                }
             }
+
+            boundTargets.Clear();
         }
 
-        private void WarnOnce(string reason, string message)
+        private void WarnOnce(string targetId, string reason, string message)
         {
-            var key = $"{viewModel.SequenceId}:{viewModel.EntryId}:{viewModel.TargetId}:{reason}";
-            if (lastWarningKey == key)
+            var key = $"{viewModel.SequenceId}:{viewModel.EntryId}:{targetId}:{reason}";
+            if (!warningKeys.Add(key))
             {
                 return;
             }
 
-            lastWarningKey = key;
             Debug.LogWarning(
                 $"[Tutorial] {message} Sequence='{viewModel.SequenceId}', Entry='{viewModel.EntryId}'.",
                 this);

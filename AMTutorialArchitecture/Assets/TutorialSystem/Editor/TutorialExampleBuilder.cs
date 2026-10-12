@@ -20,6 +20,11 @@ namespace AMTutorialArchitecture.Tutorial.Editor
     {
         private const string Root = "Assets/TutorialSystem/Example";
         private const string Authoring = Root + "/Authoring";
+        private const string MapTutorial = Authoring + "/MapTutorial";
+        private const string Targets = MapTutorial + "/Targets";
+        private const string Steps = MapTutorial + "/Steps";
+        private const string ExplainMapStep = Steps + "/01_ExplainMap";
+        private const string OpenMapStep = Steps + "/02_OpenMap";
         private const string Scenes = Root + "/Scenes";
         private const string ScenePath = Scenes + "/TutorialExample.unity";
         private const string ProjectContextPath = "Assets/Resources/ProjectContext.prefab";
@@ -31,12 +36,18 @@ namespace AMTutorialArchitecture.Tutorial.Editor
             EnsureFolder("Assets", "TutorialSystem");
             EnsureFolder("Assets/TutorialSystem", "Example");
             EnsureFolder(Root, "Authoring");
+            EnsureFolder(Authoring, "MapTutorial");
+            EnsureFolder(MapTutorial, "Targets");
+            EnsureFolder(MapTutorial, "Steps");
+            EnsureFolder(Steps, "01_ExplainMap");
+            EnsureFolder(Steps, "02_OpenMap");
             EnsureFolder(Root, "Scenes");
             EnsureFolder("Assets", "Resources");
+            MigrateLegacyAuthoringAssets();
 
             var content = CreateAuthoringAssets();
             CreateProjectContext();
-            CreateScene(content.Sequence, content.Target);
+            CreateScene(content.Sequence, content.MapButtonTarget, content.MapStatusTarget);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log($"[Tutorial] Rebuilt example scene at '{ScenePath}'.");
@@ -44,47 +55,54 @@ namespace AMTutorialArchitecture.Tutorial.Editor
 
         private static ExampleContent CreateAuthoringAssets()
         {
-            var target = LoadOrCreate<TutorialTargetAsset>(Authoring + "/MapButtonTarget.asset");
-            Set(target, "id", "hud.map-button");
+            var mapButtonTarget = LoadOrCreate<TutorialTargetAsset>(Targets + "/MapButtonTarget.asset");
+            Set(mapButtonTarget, "id", "hud.map-button");
 
-            var introDialogue = LoadOrCreate<DialogueAsset>(Authoring + "/IntroDialogue.asset");
+            var mapStatusTarget = LoadOrCreate<TutorialTargetAsset>(Targets + "/MapStatusTarget.asset");
+            Set(mapStatusTarget, "id", "hud.map-status");
+
+            var introDialogue = LoadOrCreate<DialogueAsset>(ExplainMapStep + "/IntroDialogue.asset");
             Set(introDialogue, "speakerId", "Guide");
             Set(introDialogue, "text", "Every expedition starts with knowing where to go.");
 
-            var actionDialogue = LoadOrCreate<DialogueAsset>(Authoring + "/OpenMapDialogue.asset");
+            var actionDialogue = LoadOrCreate<DialogueAsset>(OpenMapStep + "/OpenMapDialogue.asset");
             Set(actionDialogue, "speakerId", "Guide");
             Set(actionDialogue, "text", "Open the map to choose our destination.");
 
-            var indication = LoadOrCreate<IndicationAsset>(Authoring + "/MapButtonIndication.asset");
-            Set(indication, "target", target);
-            SetEnum(indication, "interactionPolicy", 1);
+            var mapButtonIndication = LoadOrCreate<IndicationAsset>(OpenMapStep + "/MapButtonIndication.asset");
+            Set(mapButtonIndication, "target", mapButtonTarget);
+
+            var mapStatusIndication = LoadOrCreate<IndicationAsset>(OpenMapStep + "/MapStatusIndication.asset");
+            Set(mapStatusIndication, "target", mapStatusTarget);
 
             var continueAction = LoadOrCreate<ContinueDialogueRequiredActionAsset>(
-                Authoring + "/ContinueDialogueAction.asset");
+                ExplainMapStep + "/ContinueDialogueAction.asset");
 
             var openMapAction = LoadOrCreate<SemanticActionRequiredActionAsset>(
-                Authoring + "/OpenMapAction.asset");
+                OpenMapStep + "/OpenMapAction.asset");
             Set(openMapAction, "actionId", OpenMapActionId);
             Set(openMapAction, "description", "Open the map successfully.");
 
-            var introEntry = LoadOrCreate<TutorialEntryAsset>(Authoring + "/IntroEntry.asset");
+            var introEntry = LoadOrCreate<TutorialEntryAsset>(ExplainMapStep + "/IntroEntry.asset");
             Set(introEntry, "id", "explain-map");
             Set(introEntry, "dialogue", introDialogue);
-            Set(introEntry, "indication", (Object)null);
+            SetArray(introEntry, "indications", new Object[0]);
+            SetEnum(introEntry, "interactionPolicy", 0);
             Set(introEntry, "requiredAction", continueAction);
 
-            var actionEntry = LoadOrCreate<TutorialEntryAsset>(Authoring + "/OpenMapEntry.asset");
+            var actionEntry = LoadOrCreate<TutorialEntryAsset>(OpenMapStep + "/OpenMapEntry.asset");
             Set(actionEntry, "id", "open-map");
             Set(actionEntry, "dialogue", actionDialogue);
-            Set(actionEntry, "indication", indication);
+            SetArray(actionEntry, "indications", new Object[] { mapButtonIndication, mapStatusIndication });
+            SetEnum(actionEntry, "interactionPolicy", 1);
             Set(actionEntry, "requiredAction", openMapAction);
 
-            var sequence = LoadOrCreate<TutorialSequenceAsset>(Authoring + "/MapTutorialSequence.asset");
+            var sequence = LoadOrCreate<TutorialSequenceAsset>(MapTutorial + "/MapTutorialSequence.asset");
             Set(sequence, "id", "example.map-tutorial");
             Set(sequence, "canSkip", true);
             SetArray(sequence, "entries", new Object[] { introEntry, actionEntry });
 
-            return new ExampleContent(sequence, target);
+            return new ExampleContent(sequence, mapButtonTarget, mapStatusTarget);
         }
 
         private static void CreateProjectContext()
@@ -103,7 +121,10 @@ namespace AMTutorialArchitecture.Tutorial.Editor
             }
         }
 
-        private static void CreateScene(TutorialSequenceAsset sequence, TutorialTargetAsset target)
+        private static void CreateScene(
+            TutorialSequenceAsset sequence,
+            TutorialTargetAsset mapButtonTarget,
+            TutorialTargetAsset mapStatusTarget)
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             CreateCamera();
@@ -140,12 +161,27 @@ namespace AMTutorialArchitecture.Tutorial.Editor
             var highlightView = mapButton.gameObject.AddComponent<GameObjectHighlightView>();
             Set(highlightView, "highlightRoot", highlight.gameObject);
             var targetView = mapButton.gameObject.AddComponent<TutorialTargetView>();
-            Set(targetView, "target", target);
+            Set(targetView, "target", mapButtonTarget);
             Set(targetView, "highlightView", highlightView);
             Set(targetView, "selectable", mapButton);
 
             var status = CreateText("FeatureStatus", canvas.transform, "Map is closed.", 24, TextAnchor.MiddleCenter);
             SetRect(status.rectTransform, new Vector2(0.5f, 0.42f), Vector2.zero, new Vector2(900f, 60f));
+
+            var statusHighlight = CreateImage(
+                "CustomMapStatusHighlight",
+                status.transform,
+                new Color(0.2f, 0.75f, 1f, 0.45f));
+            statusHighlight.raycastTarget = false;
+            statusHighlight.transform.SetAsFirstSibling();
+            SetRect(statusHighlight.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(930f, 74f));
+            statusHighlight.gameObject.SetActive(false);
+
+            var statusHighlightView = status.gameObject.AddComponent<GameObjectHighlightView>();
+            Set(statusHighlightView, "highlightRoot", statusHighlight.gameObject);
+            var statusTargetView = status.gameObject.AddComponent<TutorialTargetView>();
+            Set(statusTargetView, "target", mapStatusTarget);
+            Set(statusTargetView, "highlightView", statusHighlightView);
 
             var mapPanel = CreateImage("MapPanel", canvas.transform, new Color(0.12f, 0.24f, 0.2f, 0.96f));
             SetRect(mapPanel.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, 40f), new Vector2(760f, 360f));
@@ -319,6 +355,64 @@ namespace AMTutorialArchitecture.Tutorial.Editor
             return asset;
         }
 
+        private static void MigrateLegacyAuthoringAssets()
+        {
+            MoveAssetIfPresent(Authoring + "/MapTutorialSequence.asset", MapTutorial + "/MapTutorialSequence.asset");
+            MoveAssetIfPresent(
+                Authoring + "/MapTutorialSequence/MapTutorialSequence.asset",
+                MapTutorial + "/MapTutorialSequence.asset");
+            MoveAssetIfPresent(Authoring + "/MapButtonTarget.asset", Targets + "/MapButtonTarget.asset");
+            MoveAssetIfPresent(Authoring + "/IntroDialogue.asset", ExplainMapStep + "/IntroDialogue.asset");
+            MoveAssetIfPresent(
+                Authoring + "/MapTutorialSequence/IntroEntry/IntroDialogue.asset",
+                ExplainMapStep + "/IntroDialogue.asset");
+            MoveAssetIfPresent(Authoring + "/IntroEntry.asset", ExplainMapStep + "/IntroEntry.asset");
+            MoveAssetIfPresent(
+                Authoring + "/MapTutorialSequence/IntroEntry/IntroEntry.asset",
+                ExplainMapStep + "/IntroEntry.asset");
+            MoveAssetIfPresent(
+                Authoring + "/ContinueDialogueAction.asset",
+                ExplainMapStep + "/ContinueDialogueAction.asset");
+            MoveAssetIfPresent(
+                Authoring + "/CommonActions/ContinueDialogueAction.asset",
+                ExplainMapStep + "/ContinueDialogueAction.asset");
+            MoveAssetIfPresent(Authoring + "/OpenMapDialogue.asset", OpenMapStep + "/OpenMapDialogue.asset");
+            MoveAssetIfPresent(Authoring + "/OpenMapEntry.asset", OpenMapStep + "/OpenMapEntry.asset");
+            MoveAssetIfPresent(
+                Authoring + "/MapButtonIndication.asset",
+                OpenMapStep + "/MapButtonIndication.asset");
+            MoveAssetIfPresent(Authoring + "/OpenMapAction.asset", OpenMapStep + "/OpenMapAction.asset");
+
+            DeleteFolderIfEmpty(Authoring + "/MapTutorialSequence/IntroEntry");
+            DeleteFolderIfEmpty(Authoring + "/MapTutorialSequence");
+            DeleteFolderIfEmpty(Authoring + "/CommonActions");
+        }
+
+        private static void MoveAssetIfPresent(string sourcePath, string destinationPath)
+        {
+            if (AssetDatabase.LoadMainAssetAtPath(sourcePath) == null
+                || AssetDatabase.LoadMainAssetAtPath(destinationPath) != null)
+            {
+                return;
+            }
+
+            var error = AssetDatabase.MoveAsset(sourcePath, destinationPath);
+            if (!string.IsNullOrEmpty(error))
+            {
+                throw new System.InvalidOperationException(
+                    $"Could not move tutorial example asset from '{sourcePath}' to '{destinationPath}': {error}");
+            }
+        }
+
+        private static void DeleteFolderIfEmpty(string path)
+        {
+            if (AssetDatabase.IsValidFolder(path)
+                && AssetDatabase.FindAssets(string.Empty, new[] { path }).Length == 0)
+            {
+                AssetDatabase.DeleteAsset(path);
+            }
+        }
+
         private static void EnsureFolder(string parent, string child)
         {
             var path = parent + "/" + child;
@@ -376,15 +470,21 @@ namespace AMTutorialArchitecture.Tutorial.Editor
 
         private sealed class ExampleContent
         {
-            public ExampleContent(TutorialSequenceAsset sequence, TutorialTargetAsset target)
+            public ExampleContent(
+                TutorialSequenceAsset sequence,
+                TutorialTargetAsset mapButtonTarget,
+                TutorialTargetAsset mapStatusTarget)
             {
                 Sequence = sequence;
-                Target = target;
+                MapButtonTarget = mapButtonTarget;
+                MapStatusTarget = mapStatusTarget;
             }
 
             public TutorialSequenceAsset Sequence { get; }
 
-            public TutorialTargetAsset Target { get; }
+            public TutorialTargetAsset MapButtonTarget { get; }
+
+            public TutorialTargetAsset MapStatusTarget { get; }
         }
 
         private sealed class TutorialUi

@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using AMTutorialArchitecture.Tutorial.Application.Services;
 using AMTutorialArchitecture.Tutorial.Domain.Actions;
 using AMTutorialArchitecture.Tutorial.Domain.Definitions;
@@ -11,12 +13,14 @@ namespace AMTutorialArchitecture.Tutorial.Application.ViewModels
     {
         private readonly ITutorialService service;
         private TutorialSnapshot snapshot;
+        private IReadOnlyList<string> targetIds;
         private bool disposed;
 
         public TutorialViewModel(ITutorialService service)
         {
             this.service = service ?? throw new ArgumentNullException(nameof(service));
             snapshot = service.Current;
+            targetIds = GetTargetIds(snapshot);
             ContinueCommand = new RelayCommand(ContinueDialogue, () => CanContinueDialogue);
             SkipCommand = new RelayCommand(Skip, () => CanSkip);
             service.StateChanged += OnStateChanged;
@@ -53,9 +57,9 @@ namespace AMTutorialArchitecture.Tutorial.Application.ViewModels
         public TutorialDialogueSide DialogueSide => snapshot.CurrentEntry?.Dialogue?.Side
             ?? TutorialDialogueSide.Left;
 
-        public string TargetId => snapshot.CurrentEntry?.Indication?.TargetId ?? string.Empty;
+        public IReadOnlyList<string> TargetIds => targetIds;
 
-        public TutorialInteractionPolicy InteractionPolicy => snapshot.CurrentEntry?.Indication?.InteractionPolicy
+        public TutorialInteractionPolicy InteractionPolicy => snapshot.CurrentEntry?.InteractionPolicy
             ?? TutorialInteractionPolicy.NonBlocking;
 
         public void Dispose()
@@ -82,7 +86,17 @@ namespace AMTutorialArchitecture.Tutorial.Application.ViewModels
         private void OnStateChanged(object sender, TutorialStateChangedEventArgs args)
         {
             snapshot = args.Current;
+            targetIds = GetTargetIds(snapshot);
             RaiseAllPropertiesChanged();
+        }
+
+        private static IReadOnlyList<string> GetTargetIds(TutorialSnapshot current)
+        {
+            return current.CurrentEntry?.Indications
+                .Where(indication => indication != null)
+                .Select(indication => indication.TargetId)
+                .ToArray()
+                ?? Array.Empty<string>();
         }
 
         private void RaiseAllPropertiesChanged()

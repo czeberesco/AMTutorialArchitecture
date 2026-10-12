@@ -37,6 +37,7 @@ namespace AMTutorialArchitecture.Tutorial.Tests
             var entry = Create<TutorialEntryAsset>();
             Set(entry, "id", "welcome");
             Set(entry, "dialogue", dialogue);
+            Set(entry, "indications", new Object[0]);
             Set(entry, "requiredAction", continueAction);
 
             var sequence = Create<TutorialSequenceAsset>();

@@ -36,15 +36,20 @@ namespace AMTutorialArchitecture.Tutorial.Tests
             yield return null;
 
             Assert.That(service.Current.CurrentEntry.Id, Is.EqualTo("open-map"));
-            Assert.That(service.Current.CurrentEntry.Indication.InteractionPolicy,
+            Assert.That(service.Current.CurrentEntry.InteractionPolicy,
                 Is.EqualTo(TutorialInteractionPolicy.Blocking));
+            Assert.That(
+                service.Current.CurrentEntry.Indications.Select(indication => indication.TargetId),
+                Is.EquivalentTo(new[] { "hud.map-button", "hud.map-status" }));
 
             var highlight = FindSceneObject("CustomMapHighlight");
+            var statusHighlight = FindSceneObject("CustomMapStatusHighlight");
             var startButton = FindSceneObject("StartTutorialButton").GetComponent<Button>();
             var mapButton = FindSceneObject("MapButton").GetComponent<Button>();
             var skipButton = FindSceneObject("SkipButton").GetComponent<Button>();
 
             Assert.That(highlight.activeSelf, Is.True, "The target View should choose and show its highlight.");
+            Assert.That(statusHighlight.activeSelf, Is.True, "Every indicated target should be highlighted.");
             Assert.That(startButton.interactable, Is.False, "Blocking policy should disable unrelated interactions.");
             Assert.That(mapButton.interactable, Is.True, "Blocking policy must keep the required target interactive.");
             Assert.That(skipButton.interactable, Is.True, "Sequence skip remains available when configured.");
@@ -54,6 +59,7 @@ namespace AMTutorialArchitecture.Tutorial.Tests
 
             Assert.That(service.Current.IsActive, Is.False);
             Assert.That(highlight.activeSelf, Is.False);
+            Assert.That(statusHighlight.activeSelf, Is.False);
             Assert.That(startButton.interactable, Is.True);
             Assert.That(Object.FindFirstObjectByType<ExampleMapView>(), Is.Not.Null);
             Assert.That(FindSceneObject("MapPanel").activeSelf, Is.True,

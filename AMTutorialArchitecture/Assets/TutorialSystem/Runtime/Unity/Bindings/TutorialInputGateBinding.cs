@@ -75,7 +75,7 @@ namespace AMTutorialArchitecture.Tutorial.Unity.Bindings
 
         private void OnTargetChanged(object sender, TutorialTargetRegistrationEventArgs args)
         {
-            if (args.Target.TargetId == viewModel.TargetId)
+            if (viewModel.TargetIds.Contains(args.Target.TargetId))
             {
                 Refresh();
             }
@@ -93,9 +93,18 @@ namespace AMTutorialArchitecture.Tutorial.Unity.Bindings
                 return;
             }
 
-            if (!registry.TryGet(viewModel.TargetId, out var target) || target.Selectable == null)
+            var allowedTargets = new HashSet<Selectable>();
+            foreach (var targetId in viewModel.TargetIds)
             {
-                WarnOnce("Blocking input was requested, but the target has no registered Selectable. " +
+                if (registry.TryGet(targetId, out var target) && target.Selectable != null)
+                {
+                    allowedTargets.Add(target.Selectable);
+                }
+            }
+
+            if (allowedTargets.Count == 0)
+            {
+                WarnOnce("Blocking input was requested, but no indicated target has a registered Selectable. " +
                          "Input remains unblocked to avoid a soft lock.");
                 return;
             }
@@ -103,7 +112,7 @@ namespace AMTutorialArchitecture.Tutorial.Unity.Bindings
             var root = interactionRoot != null ? interactionRoot : transform;
             foreach (var selectable in root.GetComponentsInChildren<Selectable>(true))
             {
-                if (selectable == null || selectable == target.Selectable || alwaysAllowed.Contains(selectable))
+                if (selectable == null || allowedTargets.Contains(selectable) || alwaysAllowed.Contains(selectable))
                 {
                     continue;
                 }
@@ -130,7 +139,7 @@ namespace AMTutorialArchitecture.Tutorial.Unity.Bindings
 
         private void WarnOnce(string message)
         {
-            var key = $"{viewModel.SequenceId}:{viewModel.EntryId}:{viewModel.TargetId}";
+            var key = $"{viewModel.SequenceId}:{viewModel.EntryId}";
             if (key == lastWarningKey)
             {
                 return;
@@ -138,8 +147,7 @@ namespace AMTutorialArchitecture.Tutorial.Unity.Bindings
 
             lastWarningKey = key;
             Debug.LogWarning(
-                $"[Tutorial] {message} Sequence='{viewModel.SequenceId}', Entry='{viewModel.EntryId}', " +
-                $"Target='{viewModel.TargetId}'.",
+                $"[Tutorial] {message} Sequence='{viewModel.SequenceId}', Entry='{viewModel.EntryId}'.",
                 this);
         }
     }

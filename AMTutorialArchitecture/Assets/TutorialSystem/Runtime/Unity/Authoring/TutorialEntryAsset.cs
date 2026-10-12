@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using AMTutorialArchitecture.Tutorial.Domain.Definitions;
 using UnityEngine;
 
@@ -9,14 +11,17 @@ namespace AMTutorialArchitecture.Tutorial.Unity.Authoring
     {
         [SerializeField] private string id;
         [SerializeField] private DialogueAsset dialogue;
-        [SerializeField] private IndicationAsset indication;
+        [SerializeField] private List<IndicationAsset> indications = new List<IndicationAsset>();
+        [SerializeField] private TutorialInteractionPolicy interactionPolicy;
         [SerializeField] private RequiredActionAsset requiredAction;
 
         public string Id => id ?? string.Empty;
 
         public DialogueAsset Dialogue => dialogue;
 
-        public IndicationAsset Indication => indication;
+        public IReadOnlyList<IndicationAsset> Indications => indications;
+
+        public TutorialInteractionPolicy InteractionPolicy => interactionPolicy;
 
         public RequiredActionAsset RequiredAction => requiredAction;
 
@@ -25,7 +30,8 @@ namespace AMTutorialArchitecture.Tutorial.Unity.Authoring
             return new TutorialEntryDefinition(
                 Id,
                 dialogue != null ? dialogue.CreateDefinition() : null,
-                indication != null ? indication.CreateDefinition() : null,
+                indications.Select(indication => indication != null ? indication.CreateDefinition() : null),
+                interactionPolicy,
                 requiredAction != null ? requiredAction.CreateDefinition() : null);
         }
 
