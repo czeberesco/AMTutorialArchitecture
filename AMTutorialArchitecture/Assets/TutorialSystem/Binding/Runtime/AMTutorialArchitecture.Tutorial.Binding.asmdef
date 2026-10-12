@@ -1,9 +1,11 @@
 {
-  "name": "AMTutorialArchitecture.Tutorial.Unity",
-  "rootNamespace": "AMTutorialArchitecture.Tutorial.Unity",
+  "name": "AMTutorialArchitecture.Tutorial.Binding",
+  "rootNamespace": "AMTutorialArchitecture.Tutorial.Binding",
   "references": [
-    "AMTutorialArchitecture.Tutorial.Domain",
-    "AMTutorialArchitecture.Tutorial.Application",
+    "AMTutorialArchitecture.Tutorial.Model",
+    "AMTutorialArchitecture.Tutorial.Model.Authoring",
+    "AMTutorialArchitecture.Tutorial.ViewModel",
+    "AMTutorialArchitecture.Tutorial.View",
     "Zenject",
     "UnityEngine.UI"
   ],

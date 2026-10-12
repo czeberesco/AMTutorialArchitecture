@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c768d8e048aaa3742abfe67a26d901cf, type: 3}
   m_Name: MapExplanationDialogue
-  m_EditorClassIdentifier: AMTutorialArchitecture.Tutorial.Unity::AMTutorialArchitecture.Tutorial.Unity.Authoring.DialogueAsset
+  m_EditorClassIdentifier: AMTutorialArchitecture.Tutorial.Model.Authoring::AMTutorialArchitecture.Tutorial.Unity.Authoring.DialogueAsset
   speakerId: Guide
   text: Our route crosses dangerous territory. Let me explain how navigation works.
   side: 0

@@ -14,6 +14,9 @@ Implement the smallest coherent solution that demonstrates the architecture. Do 
 - The current project version is Unity `6000.3.10f1`.
 - Do not edit or commit generated directories such as `Library/`, `Temp/`, `Logs/`, or `UserSettings/`.
 - Keep Unity `.meta` files together with their assets.
+- Under `Assets/TutorialSystem/`, runtime code is organized by the supplied architecture: `Model/`, `ViewModel/`, `Binding/`, and `View/`. Keep support-only `Editor/`, `Example/`, and `Tests/` folders separate from those runtime layers.
+- `Model/Runtime` and `ViewModel/Runtime` are pure C# assemblies with `noEngineReferences`. `Model/Authoring` is the Unity ScriptableObject conversion boundary. `View` contains concrete presentation components. `Binding` coordinates ViewModels, Views, input, target resolution, gameplay adapters, and Extenject composition.
+- Do not recreate a generic `Runtime/Unity`, `Runtime/Domain`, or `Runtime/Application` hierarchy; place new code in the architectural layer that owns the responsibility.
 
 ## Architectural Context
 

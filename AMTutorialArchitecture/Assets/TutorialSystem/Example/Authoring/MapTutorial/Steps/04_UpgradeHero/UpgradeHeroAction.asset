@@ -11,6 +11,6 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 15904b6d34a693747badb213b7d5eebd, type: 3}
   m_Name: UpgradeHeroAction
-  m_EditorClassIdentifier: AMTutorialArchitecture.Tutorial.Unity::AMTutorialArchitecture.Tutorial.Unity.Authoring.SemanticActionRequiredActionAsset
+  m_EditorClassIdentifier: AMTutorialArchitecture.Tutorial.Model.Authoring::AMTutorialArchitecture.Tutorial.Unity.Authoring.SemanticActionRequiredActionAsset
   assetGuid: c8e06d095ab407a4a94d1d7a1bb5f069
   description: Upgrade the selected hero.

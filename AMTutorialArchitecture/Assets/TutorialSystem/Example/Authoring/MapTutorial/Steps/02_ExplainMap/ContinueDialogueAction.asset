@@ -11,5 +11,5 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3021389746e5cf943b7facd2573edbaa, type: 3}
   m_Name: ContinueDialogueAction
-  m_EditorClassIdentifier: AMTutorialArchitecture.Tutorial.Unity::AMTutorialArchitecture.Tutorial.Unity.Authoring.ContinueDialogueRequiredActionAsset
+  m_EditorClassIdentifier: AMTutorialArchitecture.Tutorial.Model.Authoring::AMTutorialArchitecture.Tutorial.Unity.Authoring.ContinueDialogueRequiredActionAsset
   assetGuid: 2e2f852bed94c934bb34216af8acd79a

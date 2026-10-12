@@ -11,5 +11,5 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e51ffa93b24ea8743b075dc6ff877866, type: 3}
   m_Name: SouthPathIndication
-  m_EditorClassIdentifier: AMTutorialArchitecture.Tutorial.Unity::AMTutorialArchitecture.Tutorial.Unity.Authoring.IndicationAsset
+  m_EditorClassIdentifier: AMTutorialArchitecture.Tutorial.Model.Authoring::AMTutorialArchitecture.Tutorial.Unity.Authoring.IndicationAsset
   target: {fileID: 11400000, guid: baa6078fdc1d7cb4ab33ffd5fac87bbc, type: 2}

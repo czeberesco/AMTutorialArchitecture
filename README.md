@@ -61,7 +61,22 @@ flowchart TB
     Dialog -->|RelayCommand| VM
 ```
 
-Dependency direction is inward. Domain and application assemblies have `noEngineReferences` enabled and do not reference Unity or Extenject. Unity and Extenject appear only in outer assemblies.
+Dependency direction is inward. The `Model` and `ViewModel` assemblies have `noEngineReferences` enabled and do not reference Unity or Extenject. Unity and Extenject appear only in the outer authoring, View, and Binding assemblies.
+
+The assembly dependency direction is enforced as follows:
+
+```mermaid
+flowchart RL
+    Binding[Binding assembly] --> ViewModel[ViewModel assembly]
+    Binding --> View[View assembly]
+    Binding --> Authoring[Model.Authoring assembly]
+    Binding --> Model[Model assembly]
+    View --> Authoring
+    Authoring --> Model
+    ViewModel --> Model
+```
+
+`Model` and `ViewModel` therefore remain portable pure C#. `Model.Authoring` is the Unity conversion boundary, `View` owns concrete presentation components, and `Binding` is the only runtime layer that coordinates all of them.
 
 ## Extenject composition
 
@@ -263,10 +278,27 @@ The showcase arms its reward hint after the main sequence finishes. After two se
 
 ```text
 Assets/TutorialSystem/
-├── Runtime/
-│   ├── Domain/        pure definitions, validation, model, commands/results
-│   ├── Application/   service facade, messages, RelayCommand, ViewModel
-│   └── Unity/         assets, Extenject installers, bindings, target Views
+├── Model/
+│   ├── Runtime/       pure actions, definitions, state, validation, commands/results
+│   └── Authoring/
+│       └── ScriptableObjects/ assets converted into pure Model definitions
+├── ViewModel/
+│   └── Runtime/
+│       ├── Services/  ITutorialService facade and state-change messages
+│       └── ViewModels/observable presentation state and RelayCommand
+├── Binding/
+│   └── Runtime/
+│       ├── Adapters/  ScriptableObject-to-service boundary adapters
+│       ├── Composition/ Extenject installers
+│       ├── Hints/     delayed-hint binding
+│       ├── Input/     blocking-input policy implementation
+│       ├── Integration/ gameplay event emitters and start/activity bridges
+│       ├── Targets/   registry implementation and target binding
+│       └── UI/        dialogue/progress UI binding
+├── View/
+│   └── Runtime/
+│       ├── Highlighting/ concrete View-owned highlight capability
+│       └── Targets/   target View and its registration contract
 ├── Example/
 │   ├── Authoring/MapTutorial/
 │   │   ├── DelayedHints/ client-side inactivity hint assets
@@ -278,6 +310,8 @@ Assets/TutorialSystem/
     ├── EditMode/      state machine, service, ViewModel, asset conversion
     └── PlayMode/      end-to-end scene and DI integration
 ```
+
+Folder names mirror the supplied architecture directly. Namespaces retain the more specific `Domain`, `Application`, and `Unity` terminology where it describes the responsibility inside a layer, while the assembly definitions enforce the four principal boundaries: `Model`, `ViewModel`, `Binding`, and `View`.
 
 ## Automated validation
 

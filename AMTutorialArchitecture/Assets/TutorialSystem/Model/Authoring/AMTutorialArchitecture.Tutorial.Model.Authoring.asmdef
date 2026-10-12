@@ -1,0 +1,16 @@
+{
+  "name": "AMTutorialArchitecture.Tutorial.Model.Authoring",
+  "rootNamespace": "AMTutorialArchitecture.Tutorial.Model.Authoring",
+  "references": [
+    "AMTutorialArchitecture.Tutorial.Model"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

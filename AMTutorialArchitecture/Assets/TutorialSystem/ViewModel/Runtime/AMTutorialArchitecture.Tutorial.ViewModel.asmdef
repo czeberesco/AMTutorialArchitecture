@@ -1,7 +1,9 @@
 {
-  "name": "AMTutorialArchitecture.Tutorial.Domain",
-  "rootNamespace": "AMTutorialArchitecture.Tutorial.Domain",
-  "references": [],
+  "name": "AMTutorialArchitecture.Tutorial.ViewModel",
+  "rootNamespace": "AMTutorialArchitecture.Tutorial.ViewModel",
+  "references": [
+    "AMTutorialArchitecture.Tutorial.Model"
+  ],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,

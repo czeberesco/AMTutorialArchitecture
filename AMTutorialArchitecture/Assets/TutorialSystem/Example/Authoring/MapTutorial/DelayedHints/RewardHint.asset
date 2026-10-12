@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f7d96b57599b8a74d9d6d719cf67de17, type: 3}
   m_Name: RewardHint
-  m_EditorClassIdentifier: AMTutorialArchitecture.Tutorial.Unity::AMTutorialArchitecture.Tutorial.Unity.Authoring.DelayedTutorialHintAsset
+  m_EditorClassIdentifier: AMTutorialArchitecture.Tutorial.Model.Authoring::AMTutorialArchitecture.Tutorial.Unity.Authoring.DelayedTutorialHintAsset
   inactivitySeconds: 2
   targets:
   - {fileID: 11400000, guid: c854038982338884082319e7380e279c, type: 2}

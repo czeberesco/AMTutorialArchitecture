@@ -11,5 +11,5 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e51ffa93b24ea8743b075dc6ff877866, type: 3}
   m_Name: MapStatusIndication
-  m_EditorClassIdentifier: AMTutorialArchitecture.Tutorial.Unity::AMTutorialArchitecture.Tutorial.Unity.Authoring.IndicationAsset
+  m_EditorClassIdentifier: AMTutorialArchitecture.Tutorial.Model.Authoring::AMTutorialArchitecture.Tutorial.Unity.Authoring.IndicationAsset
   target: {fileID: 11400000, guid: 010a0429e824e2048b539e3edba90708, type: 2}

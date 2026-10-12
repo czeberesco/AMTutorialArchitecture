@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6f7828e3a3060364797a1c646cdc8b9d, type: 3}
   m_Name: MapTutorialSequence
-  m_EditorClassIdentifier: AMTutorialArchitecture.Tutorial.Unity::AMTutorialArchitecture.Tutorial.Unity.Authoring.TutorialSequenceAsset
+  m_EditorClassIdentifier: AMTutorialArchitecture.Tutorial.Model.Authoring::AMTutorialArchitecture.Tutorial.Unity.Authoring.TutorialSequenceAsset
   id: example.architecture-showcase
   canSkip: 1
   entries:

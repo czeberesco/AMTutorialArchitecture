@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0506bd3a1a2a1ec4a9372f27f2363d1e, type: 3}
   m_Name: ChoosePathEntry
-  m_EditorClassIdentifier: AMTutorialArchitecture.Tutorial.Unity::AMTutorialArchitecture.Tutorial.Unity.Authoring.TutorialEntryAsset
+  m_EditorClassIdentifier: AMTutorialArchitecture.Tutorial.Model.Authoring::AMTutorialArchitecture.Tutorial.Unity.Authoring.TutorialEntryAsset
   id: choose-path
   dialogue: {fileID: 0}
   indications:

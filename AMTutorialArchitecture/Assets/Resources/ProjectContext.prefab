@@ -75,4 +75,4 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3a4e9a495d1605e45825349f7d7f0243, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: AMTutorialArchitecture.Tutorial.Unity::AMTutorialArchitecture.Tutorial.Unity.Composition.TutorialProjectInstaller
+  m_EditorClassIdentifier: AMTutorialArchitecture.Tutorial.Binding::AMTutorialArchitecture.Tutorial.Unity.Composition.TutorialProjectInstaller
