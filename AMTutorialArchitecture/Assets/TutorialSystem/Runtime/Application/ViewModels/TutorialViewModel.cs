@@ -75,7 +75,11 @@ namespace AMTutorialArchitecture.Tutorial.Application.ViewModels
 
         private void ContinueDialogue()
         {
-            service.SubmitAction(TutorialActionOccurrence.Success(TutorialActionIds.ContinueDialogue));
+            var actionId = snapshot.CurrentEntry?.RequiredAction?.ExpectedActionId;
+            if (!string.IsNullOrWhiteSpace(actionId))
+            {
+                service.SubmitAction(TutorialActionOccurrence.Success(actionId));
+            }
         }
 
         private void Skip()

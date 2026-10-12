@@ -61,11 +61,13 @@ The intended authoring model contains:
 - `TutorialEntryAsset`: optional dialogue, zero or more indications, one entry-level interaction policy, and one required action.
 - `DialogueAsset`: localized dialogue content, speaker identity, and presentation placement data required by the design.
 - `IndicationAsset`: the semantic tutorial target only; it contains no highlight style.
-- `RequiredActionAsset`: a semantic completion condition, not a `UnityEvent`, delegate, Button reference, or scene callback.
+- `RequiredActionAsset`: a semantic completion condition and the source of its own stable identity, not a `UnityEvent`, delegate, Button reference, scene callback, or manually maintained string key.
 - `TutorialTargetAsset`: a stable target identity shared by authoring assets and View components.
 - `DelayedTutorialHintAsset`: client-side inactivity duration and semantic targets; it contains no highlight style or runtime timer state.
 
 Convert authoring assets into pure C# definitions/DTOs at the Unity boundary. Runtime models and saved progress must not mutate ScriptableObjects.
+
+Unity-facing components identify required actions by referencing the `RequiredActionAsset` itself. The asset's Unity GUID is automatically baked into hidden serialized data and converted to a plain stable ID at the Unity/domain boundary. Never use `GetInstanceID`, the asset name, or a manually authored action-ID string: instance IDs are session-local, names are mutable, and Unity object references cannot cross the shared/client-server boundary.
 
 Avoid direct references from tutorial assets to scene GameObjects or transient UI instances. Views register stable target identities with a target registry when they become available and unregister them when they are disabled or destroyed.
 
@@ -81,7 +83,7 @@ Required actions describe semantic outcomes. Expected examples include:
 - Receive a domain signal.
 - Activate a semantic target when activation itself is the intended outcome.
 
-Prefer strongly typed or stable-ID contracts over matching C# type names or scene hierarchy paths. Keep the design open to additional action predicates without adding feature-specific branches to the tutorial state machine.
+Prefer strongly typed or stable-ID contracts over matching C# type names or scene hierarchy paths. For authored required actions, use the `RequiredActionAsset` reference in Unity and its baked asset GUID in pure logic, persistence, or transport. Keep the design open to additional action predicates without adding feature-specific branches to the tutorial state machine.
 
 ## Dependency Injection and Service Entry Point
 

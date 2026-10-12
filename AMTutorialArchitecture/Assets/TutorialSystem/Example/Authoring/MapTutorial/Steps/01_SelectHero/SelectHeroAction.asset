@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15904b6d34a693747badb213b7d5eebd, type: 3}
   m_Name: SelectHeroAction
   m_EditorClassIdentifier: AMTutorialArchitecture.Tutorial.Unity::AMTutorialArchitecture.Tutorial.Unity.Authoring.SemanticActionRequiredActionAsset
-  actionId: game.hero.select
+  assetGuid: 058c388c65fb4794ab9e3c63d9e5117a
   description: Select the hero successfully.

@@ -12,6 +12,7 @@ namespace AMTutorialArchitecture.Tutorial.Tests
 {
     public sealed class TutorialServiceTests
     {
+        private const string ContinueAction = "test.action.continue";
         private const string OpenMapAction = "game.map.open";
         private ITutorialService service;
 
@@ -97,7 +98,7 @@ namespace AMTutorialArchitecture.Tutorial.Tests
                 new DialogueDefinition("Guide", "Open the map.", TutorialDialogueSide.Left),
                 new[] { new IndicationDefinition("hud.map-button") },
                 TutorialInteractionPolicy.Blocking,
-                new ContinueDialogueRequiredActionDefinition());
+                new ContinueDialogueRequiredActionDefinition(ContinueAction));
             var sequence = new TutorialSequenceDefinition("invalid", false, new[] { entry });
 
             var result = service.Start(sequence);
@@ -121,7 +122,7 @@ namespace AMTutorialArchitecture.Tutorial.Tests
                         new DialogueDefinition("Guide", "Let me show you the map.", TutorialDialogueSide.Left),
                         System.Array.Empty<IndicationDefinition>(),
                         TutorialInteractionPolicy.NonBlocking,
-                        new ContinueDialogueRequiredActionDefinition()),
+                        new ContinueDialogueRequiredActionDefinition(ContinueAction)),
                     new TutorialEntryDefinition(
                         "open-map",
                         new DialogueDefinition("Guide", "Open the map now.", TutorialDialogueSide.Left),

@@ -1,16 +1,23 @@
+using System;
+
 namespace AMTutorialArchitecture.Tutorial.Domain.Actions
 {
     public sealed class ContinueDialogueRequiredActionDefinition : IRequiredActionDefinition
     {
+        public ContinueDialogueRequiredActionDefinition(string expectedActionId)
+        {
+            ExpectedActionId = expectedActionId ?? string.Empty;
+        }
+
         public string Description => "Continue the tutorial dialogue.";
 
-        public string ExpectedActionId => TutorialActionIds.ContinueDialogue;
+        public string ExpectedActionId { get; }
 
         public bool IsSatisfiedBy(TutorialActionOccurrence occurrence)
         {
             return occurrence != null
                 && occurrence.Succeeded
-                && occurrence.ActionId == TutorialActionIds.ContinueDialogue;
+                && string.Equals(occurrence.ActionId, ExpectedActionId, StringComparison.Ordinal);
         }
     }
 }

@@ -31,10 +31,6 @@ namespace AMTutorialArchitecture.Tutorial.Editor
         private const string Scenes = Root + "/Scenes";
         private const string ScenePath = Scenes + "/TutorialExample.unity";
         private const string ProjectContextPath = "Assets/Resources/ProjectContext.prefab";
-        private const string SelectHeroActionId = "game.hero.select";
-        private const string OpenMapActionId = "game.map.open";
-        private const string UpgradeHeroActionId = "game.hero.upgrade";
-        private const string ChoosePathActionId = "game.path.choose";
 
         [MenuItem("Tools/Tutorial/Rebuild Example")]
         public static void Build()
@@ -84,7 +80,6 @@ namespace AMTutorialArchitecture.Tutorial.Editor
                 heroTarget);
             var selectHeroAction = CreateSemanticAction(
                 SelectHeroStep + "/SelectHeroAction.asset",
-                SelectHeroActionId,
                 "Select the hero successfully.");
             var selectHeroEntry = CreateEntry(
                 SelectHeroStep + "/SelectHeroEntry.asset",
@@ -98,8 +93,9 @@ namespace AMTutorialArchitecture.Tutorial.Editor
                 ExplainMapStep + "/MapExplanationDialogue.asset",
                 "Guide",
                 "Our route crosses dangerous territory. Let me explain how navigation works.");
-            var continueAction = LoadOrCreate<ContinueDialogueRequiredActionAsset>(
-                ExplainMapStep + "/ContinueDialogueAction.asset");
+            var continueActionPath = ExplainMapStep + "/ContinueDialogueAction.asset";
+            var continueAction = LoadOrCreate<ContinueDialogueRequiredActionAsset>(continueActionPath);
+            SynchronizeActionAssetId(continueAction);
             var explainMapEntry = CreateEntry(
                 ExplainMapStep + "/MapExplanationEntry.asset",
                 "explain-map",
@@ -114,10 +110,9 @@ namespace AMTutorialArchitecture.Tutorial.Editor
                 "That is the theory. Now open the map and see the available routes.");
             var mapButtonIndication = LoadOrCreate<IndicationAsset>(OpenMapStep + "/MapButtonIndication.asset");
             Set(mapButtonIndication, "target", mapButtonTarget);
-            var openMapAction = LoadOrCreate<SemanticActionRequiredActionAsset>(
-                OpenMapStep + "/OpenMapAction.asset");
-            Set(openMapAction, "actionId", OpenMapActionId);
-            Set(openMapAction, "description", "Open the map successfully.");
+            var openMapAction = CreateSemanticAction(
+                OpenMapStep + "/OpenMapAction.asset",
+                "Open the map successfully.");
             var openMapEntry = CreateEntry(
                 OpenMapStep + "/OpenMapEntry.asset",
                 "open-map",
@@ -131,7 +126,6 @@ namespace AMTutorialArchitecture.Tutorial.Editor
                 upgradeTarget);
             var upgradeAction = CreateSemanticAction(
                 UpgradeHeroStep + "/UpgradeHeroAction.asset",
-                UpgradeHeroActionId,
                 "Upgrade the selected hero.");
             var upgradeEntry = CreateEntry(
                 UpgradeHeroStep + "/UpgradeHeroEntry.asset",
@@ -151,7 +145,6 @@ namespace AMTutorialArchitecture.Tutorial.Editor
             Set(statusIndication, "target", mapStatusTarget);
             var choosePathAction = CreateSemanticAction(
                 ChoosePathStep + "/ChoosePathAction.asset",
-                ChoosePathActionId,
                 "Choose either available route.");
             var choosePathEntry = CreateEntry(
                 ChoosePathStep + "/ChoosePathEntry.asset",
@@ -180,6 +173,10 @@ namespace AMTutorialArchitecture.Tutorial.Editor
             return new ExampleContent(
                 sequence,
                 rewardHint,
+                selectHeroAction,
+                openMapAction,
+                upgradeAction,
+                choosePathAction,
                 heroTarget,
                 mapButtonTarget,
                 mapStatusTarget,
@@ -275,11 +272,11 @@ namespace AMTutorialArchitecture.Tutorial.Editor
             ConfigureExampleAction(southButton, status, "South route selected. Wait 2 seconds for the reward hint.");
             ConfigureExampleAction(rewardButton, status, "Reward claimed. The inactivity timer has restarted.");
 
-            ConfigureActionEmitter(heroButton, SelectHeroActionId);
-            ConfigureActionEmitter(mapButton, OpenMapActionId);
-            ConfigureActionEmitter(upgradeButton, UpgradeHeroActionId);
-            ConfigureActionEmitter(northButton, ChoosePathActionId);
-            ConfigureActionEmitter(southButton, ChoosePathActionId);
+            ConfigureActionEmitter(heroButton, content.SelectHeroAction);
+            ConfigureActionEmitter(mapButton, content.OpenMapAction);
+            ConfigureActionEmitter(upgradeButton, content.UpgradeAction);
+            ConfigureActionEmitter(northButton, content.ChoosePathAction);
+            ConfigureActionEmitter(southButton, content.ChoosePathAction);
 
             var startTrigger = startButton.gameObject.AddComponent<TutorialStartTrigger>();
             Set(startTrigger, "sequence", content.Sequence);
@@ -448,10 +445,10 @@ namespace AMTutorialArchitecture.Tutorial.Editor
             Set(actionView, "successMessage", message);
         }
 
-        private static void ConfigureActionEmitter(Button button, string actionId)
+        private static void ConfigureActionEmitter(Button button, RequiredActionAsset action)
         {
             var emitter = button.gameObject.AddComponent<TutorialActionEmitter>();
-            Set(emitter, "actionId", actionId);
+            Set(emitter, "action", action);
             Set(emitter, "button", button);
         }
 
@@ -549,13 +546,19 @@ namespace AMTutorialArchitecture.Tutorial.Editor
 
         private static SemanticActionRequiredActionAsset CreateSemanticAction(
             string path,
-            string actionId,
             string description)
         {
             var action = LoadOrCreate<SemanticActionRequiredActionAsset>(path);
-            Set(action, "actionId", actionId);
+            SynchronizeActionAssetId(action);
             Set(action, "description", description);
             return action;
+        }
+
+        private static void SynchronizeActionAssetId(RequiredActionAsset action)
+        {
+            var path = AssetDatabase.GetAssetPath(action);
+            var guid = AssetDatabase.AssetPathToGUID(path);
+            Set(action, "assetGuid", guid);
         }
 
         private static TutorialEntryAsset CreateEntry(
@@ -728,6 +731,10 @@ namespace AMTutorialArchitecture.Tutorial.Editor
             public ExampleContent(
                 TutorialSequenceAsset sequence,
                 DelayedTutorialHintAsset rewardHint,
+                RequiredActionAsset selectHeroAction,
+                RequiredActionAsset openMapAction,
+                RequiredActionAsset upgradeAction,
+                RequiredActionAsset choosePathAction,
                 TutorialTargetAsset heroTarget,
                 TutorialTargetAsset mapButtonTarget,
                 TutorialTargetAsset mapStatusTarget,
@@ -738,6 +745,10 @@ namespace AMTutorialArchitecture.Tutorial.Editor
             {
                 Sequence = sequence;
                 RewardHint = rewardHint;
+                SelectHeroAction = selectHeroAction;
+                OpenMapAction = openMapAction;
+                UpgradeAction = upgradeAction;
+                ChoosePathAction = choosePathAction;
                 HeroTarget = heroTarget;
                 MapButtonTarget = mapButtonTarget;
                 MapStatusTarget = mapStatusTarget;
@@ -750,6 +761,14 @@ namespace AMTutorialArchitecture.Tutorial.Editor
             public TutorialSequenceAsset Sequence { get; }
 
             public DelayedTutorialHintAsset RewardHint { get; }
+
+            public RequiredActionAsset SelectHeroAction { get; }
+
+            public RequiredActionAsset OpenMapAction { get; }
+
+            public RequiredActionAsset UpgradeAction { get; }
+
+            public RequiredActionAsset ChoosePathAction { get; }
 
             public TutorialTargetAsset HeroTarget { get; }
 

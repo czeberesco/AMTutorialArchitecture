@@ -8,7 +8,7 @@ namespace AMTutorialArchitecture.Tutorial.Unity.Authoring
     {
         public override IRequiredActionDefinition CreateDefinition()
         {
-            return new ContinueDialogueRequiredActionDefinition();
+            return new ContinueDialogueRequiredActionDefinition(Id);
         }
     }
 }

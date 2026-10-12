@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15904b6d34a693747badb213b7d5eebd, type: 3}
   m_Name: OpenMapAction
   m_EditorClassIdentifier: AMTutorialArchitecture.Tutorial.Unity::AMTutorialArchitecture.Tutorial.Unity.Authoring.SemanticActionRequiredActionAsset
-  actionId: game.map.open
+  assetGuid: 75367f1a4847f4345bb08da0a54e6721
   description: Open the map successfully.

@@ -121,6 +121,8 @@ flowchart LR
 
 ScriptableObjects are immutable authoring assets. They are converted into pure C# definitions before entering the service. Player progress is never written into an asset.
 
+Required actions do not expose a hand-authored string key. Unity-facing components reference the `RequiredActionAsset` directly, and the asset automatically stores its own Unity GUID in a hidden serialized field. Conversion uses that GUID as `ExpectedActionId` in the pure definition. This keeps authoring reference-safe while giving shared logic, persistence, and a server a deterministic plain value with no `UnityEngine` dependency. Renaming or moving an asset preserves its GUID; duplicating it creates a distinct action identity.
+
 An entry has the following composition:
 
 ```text
@@ -190,7 +192,7 @@ sequenceDiagram
     Binding-->>FeatureView: Clear/update presentation
 ```
 
-Presentation target ID and completion action ID are deliberately separate. For example, `hud.map-button` identifies what to highlight while `game.map.open` identifies the successful outcome that advances the tutorial. Failed or unrelated actions do not advance the sequence.
+Presentation target ID and completion action ID are deliberately separate. For example, `hud.map-button` identifies what to highlight, while the referenced `OpenMapAction.asset` supplies the GUID of the successful outcome that advances the tutorial. Feature Views and emitters reference that action asset rather than repeating a string. Failed or unrelated actions do not advance the sequence.
 
 ## State machine
 
@@ -310,7 +312,7 @@ PlayMode integration test:
   -logFile 'AMTutorialArchitecture/Logs/PlayModeTests.log'
 ```
 
-Current automated result: six EditMode tests and one PlayMode integration test pass.
+Current automated result: seven EditMode tests and one PlayMode integration test pass.
 
 ## Deliberate extension points
 
