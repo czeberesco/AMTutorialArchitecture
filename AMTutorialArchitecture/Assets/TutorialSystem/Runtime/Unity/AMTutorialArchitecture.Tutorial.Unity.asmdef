@@ -1,0 +1,19 @@
+{
+  "name": "AMTutorialArchitecture.Tutorial.Unity",
+  "rootNamespace": "AMTutorialArchitecture.Tutorial.Unity",
+  "references": [
+    "AMTutorialArchitecture.Tutorial.Domain",
+    "AMTutorialArchitecture.Tutorial.Application",
+    "Zenject",
+    "UnityEngine.UI"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

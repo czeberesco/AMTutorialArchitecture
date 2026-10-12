@@ -1,0 +1,26 @@
+{
+  "name": "AMTutorialArchitecture.Tutorial.Tests.PlayMode",
+  "rootNamespace": "AMTutorialArchitecture.Tutorial.Tests",
+  "references": [
+    "AMTutorialArchitecture.Tutorial.Domain",
+    "AMTutorialArchitecture.Tutorial.Application",
+    "AMTutorialArchitecture.Tutorial.Unity",
+    "AMTutorialArchitecture.Tutorial.Example",
+    "Zenject",
+    "UnityEngine.UI",
+    "UnityEngine.TestRunner"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [
+    "nunit.framework.dll"
+  ],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

@@ -1,0 +1,24 @@
+{
+  "name": "AMTutorialArchitecture.Tutorial.Editor",
+  "rootNamespace": "AMTutorialArchitecture.Tutorial.Editor",
+  "references": [
+    "AMTutorialArchitecture.Tutorial.Domain",
+    "AMTutorialArchitecture.Tutorial.Application",
+    "AMTutorialArchitecture.Tutorial.Unity",
+    "AMTutorialArchitecture.Tutorial.Example",
+    "Zenject",
+    "UnityEngine.UI",
+    "Unity.InputSystem"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

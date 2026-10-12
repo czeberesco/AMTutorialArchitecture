@@ -1,0 +1,26 @@
+{
+  "name": "AMTutorialArchitecture.Tutorial.Tests.EditMode",
+  "rootNamespace": "AMTutorialArchitecture.Tutorial.Tests",
+  "references": [
+    "AMTutorialArchitecture.Tutorial.Domain",
+    "AMTutorialArchitecture.Tutorial.Application",
+    "AMTutorialArchitecture.Tutorial.Unity",
+    "UnityEngine.TestRunner",
+    "UnityEditor.TestRunner"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [
+    "nunit.framework.dll"
+  ],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

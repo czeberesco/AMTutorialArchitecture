@@ -1,0 +1,16 @@
+{
+  "name": "AMTutorialArchitecture.Tutorial.Application",
+  "rootNamespace": "AMTutorialArchitecture.Tutorial.Application",
+  "references": [
+    "AMTutorialArchitecture.Tutorial.Domain"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": true
+}

@@ -1,0 +1,17 @@
+{
+  "name": "AMTutorialArchitecture.Tutorial.Example",
+  "rootNamespace": "AMTutorialArchitecture.Tutorial.Example",
+  "references": [
+    "AMTutorialArchitecture.Tutorial.Unity",
+    "UnityEngine.UI"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
